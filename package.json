@@ -9,6 +9,7 @@
   "files": [
     "dist",
     "README.md",
+    "server.json",
     "LICENSE",
     "CHANGELOG.md"
   ],

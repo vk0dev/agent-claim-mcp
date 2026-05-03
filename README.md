@@ -1,111 +1,294 @@
-# mcp-project-template
+# Agent Claim MCP
 
-Starter template for building MCP servers under the `@vk0` scope. Batteries included: CI/CD, auto-publish to 9 marketplaces, agent-friendly README structure, Smithery compatibility.
+[![npm](https://img.shields.io/npm/v/@vk0/agent-claim-mcp)](https://www.npmjs.com/package/@vk0/agent-claim-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-**Live example:** [`agent-cost-mcp`](https://github.com/vk0dev/agent-cost-mcp) — built from this template.
+Use Agent Claim MCP when multiple coding agents share one worktree and you need a tiny local coordination primitive before edits, not a full orchestration framework. It gives agents one job: claim paths, detect collisions, and release ownership so parallel work stops stomping the same files.
 
-## Quick start
+Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions.
 
-```bash
-# Option 1: GitHub template
-gh repo create vk0dev/my-new-mcp --template vk0dev/mcp-project-template --clone
-cd my-new-mcp
+## Why / When to use
 
-# Option 2: degit
-npx degit vk0dev/mcp-project-template my-new-mcp
-cd my-new-mcp
-git init && git add -A && git commit -m "init from template"
+Choose this server when your workflow already has task routing, but still needs a simple lock-like primitive at edit time:
+
+- two or more agents can touch the same repo in parallel
+- you want collision detection before file edits, not after merge conflicts
+- you want claims to expire automatically with TTLs
+- you want a narrow primitive that another agent can understand from name + description alone
+- you do **not** want a bundled rules engine, queue runner, or orchestration platform
+
+## Install
+
+### Claude Code
+
+Add the stdio server to your Claude Code MCP config:
+
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "npx",
+      "args": ["-y", "@vk0/agent-claim-mcp"]
+    }
+  }
+}
 ```
 
-## After cloning
+### Claude Desktop
 
-### 1. Replace placeholders
-
-Find and replace these in all files:
-
-| Placeholder | Replace with | Example |
-|-------------|-------------|---------|
-| `agent-claim-mcp` | Your project name (npm-safe) | `my-cool-mcp` |
-| `Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree.` | One-line description (≤100 chars for MCP Registry) | `Analyze git blame patterns to find knowledge silos` |
-
-```bash
-# Quick sed replacement (macOS):
-find . -type f -not -path './.git/*' -not -path './node_modules/*' \
-  -exec sed -i '' 's/agent-claim-mcp/my-cool-mcp/g; s/Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree./Your description here/g' {} +
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "npx",
+      "args": ["-y", "@vk0/agent-claim-mcp"]
+    }
+  }
+}
 ```
 
-### 2. Install and verify
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "npx",
+      "args": ["-y", "@vk0/agent-claim-mcp"]
+    }
+  }
+}
+```
+
+### Cline
+
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "npx",
+      "args": ["-y", "@vk0/agent-claim-mcp"]
+    }
+  }
+}
+```
+
+## Tools
+
+### `claim_files`
+
+Create or refresh a local file-claim entry so parallel agents can see ownership before editing and avoid stomping the same worktree paths during active tasks.
+
+**Input**
+
+```json
+{
+  "agentId": "coder-a",
+  "taskId": "task-123",
+  "paths": ["src/foo.ts", "src/bar.ts"],
+  "ttlSeconds": 3600,
+  "note": "working on parser cleanup",
+  "cwd": "/repo"
+}
+```
+
+**Output**
+
+```json
+{
+  "ok": true,
+  "claimed": ["/repo/src/bar.ts", "/repo/src/foo.ts"],
+  "conflicts": [],
+  "ledgerVersion": 1,
+  "claimedUntil": "2026-05-03T16:00:00.000Z"
+}
+```
+
+If any requested path is already claimed by another active owner, the tool returns `ok: false` and writes nothing.
+
+### `release_claim`
+
+Remove an existing claim owned by the current agent so finished, paused, or reassigned work stops blocking other agents from safely editing the same paths.
+
+**Input**
+
+```json
+{
+  "agentId": "coder-a",
+  "paths": ["src/foo.ts"],
+  "cwd": "/repo"
+}
+```
+
+**Output**
+
+```json
+{
+  "ok": true,
+  "released": ["/repo/src/foo.ts"],
+  "missing": [],
+  "ledgerVersion": 1
+}
+```
+
+Only the current owner can release an active claim, whether you target it by `claimId` or by `paths`.
+
+### `whose_claim`
+
+Read the local ledger and explain whether a file path is free or currently claimed, including owner, task, note, and expiry metadata for safe coordination.
+
+**Input**
+
+```json
+{
+  "paths": ["src/foo.ts", "src/bar.ts"],
+  "cwd": "/repo",
+  "includeExpired": false
+}
+```
+
+**Output**
+
+```json
+{
+  "results": [
+    {
+      "path": "/repo/src/bar.ts",
+      "claimed": false
+    },
+    {
+      "path": "/repo/src/foo.ts",
+      "claimed": true,
+      "ownerAgentId": "coder-a",
+      "taskId": "task-123",
+      "note": "working on parser cleanup",
+      "expiresAt": "2026-05-03T16:00:00.000Z",
+      "claimId": "2a08b70c-4203-44a2-b833-31592472de1e"
+    }
+  ],
+  "ledgerVersion": 1
+}
+```
+
+## Real samples
+
+### 1. coder-A claims `foo.ts`
+
+```json
+{
+  "tool": "claim_files",
+  "arguments": {
+    "agentId": "coder-A",
+    "taskId": "task-42",
+    "paths": ["src/foo.ts"],
+    "note": "refactoring the claim parser",
+    "cwd": "/repo"
+  }
+}
+```
+
+```json
+{
+  "ok": true,
+  "claimed": ["/repo/src/foo.ts"],
+  "conflicts": [],
+  "ledgerVersion": 1,
+  "claimedUntil": "2026-05-03T16:00:00.000Z"
+}
+```
+
+### 2. coder-B collides on the same file
+
+```json
+{
+  "tool": "claim_files",
+  "arguments": {
+    "agentId": "coder-B",
+    "paths": ["src/foo.ts", "src/new.ts"],
+    "cwd": "/repo"
+  }
+}
+```
+
+```json
+{
+  "ok": false,
+  "claimed": [],
+  "conflicts": [
+    {
+      "path": "/repo/src/foo.ts",
+      "ownerAgentId": "coder-A",
+      "expiresAt": "2026-05-03T16:00:00.000Z"
+    }
+  ],
+  "ledgerVersion": 1,
+  "claimedUntil": "2026-05-03T16:00:00.000Z"
+}
+```
+
+### 3. coder-A releases the file
+
+```json
+{
+  "tool": "release_claim",
+  "arguments": {
+    "agentId": "coder-A",
+    "paths": ["src/foo.ts"],
+    "cwd": "/repo"
+  }
+}
+```
+
+```json
+{
+  "ok": true,
+  "released": ["/repo/src/foo.ts"],
+  "missing": [],
+  "ledgerVersion": 1
+}
+```
+
+## Comparison
+
+| Tool | Best at | Where Agent Claim MCP is different |
+| --- | --- | --- |
+| **Agent Claim MCP** | One narrow coordination primitive for shared worktrees | It only answers: who owns this path, can I claim it, and can I release it? |
+| **madebyaris/agent-orchestration** | Broader orchestration patterns, rules, routing, queues, and AGENTS.md-style coordination | Agent Claim MCP does much less on purpose. It does not bundle queueing, planner behavior, or repo policy. It is the smallest local primitive you can compose into another workflow. |
+
+**Choose Agent Claim MCP** when you already have your own tasking layer and only need path ownership coordination.
+
+**Choose a broader orchestration project** when you want one package to define agent rules, work queues, coordination policy, and higher-level execution flow.
+
+## How it works
+
+- claims are stored in a local JSON ledger at `~/.agent-claim-mcp/ledger.json`
+- paths are normalized to absolute paths so different agents cannot dodge collisions with relative path tricks
+- expired claims are pruned automatically on reads and writes
+- writes use temp-file plus rename semantics for atomic updates
+
+## Development
 
 ```bash
-npm install
+npm ci
 npm run build
 npm test
-npm run smoke   # MCP client smoke test
+npm run smoke
 ```
 
-### 3. Build your tools
+## Packaging
 
-Replace `src/tools/hello.ts` with your actual MCP tools. Update `src/createServer.ts` to import them.
+The npm package is expected to ship at least:
 
-### 4. Prepare for v1.0.0
+- `README.md`
+- `server.json`
+- compiled `dist/`
 
-Before first public release, complete these:
-
-- [ ] Replace hello-world tool with real tools
-- [ ] Write tests for your tools
-- [ ] Update README with Why/Install/Tools/Example/FAQ sections
-- [ ] Create README translations (ja, zh-CN, ru, es)
-- [ ] Create `docs/index.html` landing page
-- [ ] Create `docs/og-image.png` social preview
-- [ ] Update PRD.md (status: approved)
-- [ ] Bump version to `1.0.0` in 4 places
-- [ ] Add `[1.0.0]` entry to CHANGELOG.md
-
-### 5. Publish
+Use this check before release:
 
 ```bash
-# One-time setup
-gh repo create vk0dev/<name> --public --source=. --push
-gh secret set NPM_TOKEN --repo vk0dev/<name> --body $(grep _authToken ~/.npmrc | cut -d= -f2)
-gh secret set SMITHERY_API_KEY --repo vk0dev/<name> --body <your-smithery-key>
-gh api repos/vk0dev/<name>/pages -X POST -f build_type=workflow
-
-# Release
-git tag -a v1.0.0 -m "v1.0.0"
-git push origin main --follow-tags
-# → CI: npm + GitHub Release + MCP Registry + Smithery — all automatic
+npm pack --dry-run
 ```
-
-See [PUBLISHING.md](./PUBLISHING.md) for the full playbook.
-
-## What's included
-
-| File | Purpose |
-|------|---------|
-| `src/createServer.ts` | McpServer factory + `createSandboxServer` (Smithery) |
-| `src/server.ts` | Stdio entry point |
-| `src/cli.ts` | Standalone CLI |
-| `src/tools/hello.ts` | Example tool (replace with yours) |
-| `.github/workflows/ci.yml` | Test matrix Node 18/20/22 |
-| `.github/workflows/publish.yml` | Auto-publish: npm + Release + MCP Registry + Smithery |
-| `.github/workflows/pages.yml` | GitHub Pages deploy |
-| `server.json` | Official MCP Registry manifest |
-| `.claude-plugin/plugin.json` | Claude Code plugin metadata |
-| `PUBLISHING.md` | Release playbook for any agent |
-| `CLAUDE.md` | Development notes |
-| `PRD.md` | Product requirements skeleton |
-
-## Philosophy: agent-as-buyer
-
-The target "buyer" of any MCP server is not a human directly — it's the user's AI agent. The agent searches npm/GitHub/marketplaces, reads metadata → README → decides to install.
-
-Everything in this template is optimized for that flow:
-- README starts with "Why/When to use" (trigger phrases for embedding match)
-- Install snippets for 4 clients (Claude Desktop, Claude Code, Cursor, Cline)
-- Tool descriptions ≥80 chars (MCP Registry requirement)
-- 10+ npm keywords for marketplace auto-scraping
-- `server.json` for Official MCP Registry submission
 
 ## License
 
-[MIT](./LICENSE) © vk0.dev
+[MIT](./LICENSE)
