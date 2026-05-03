@@ -18,7 +18,7 @@ async function makeLedgerPath(): Promise<string> {
 
 async function connectClient(ledgerPath: string): Promise<Client> {
   const transport = new StdioClientTransport({
-    command: process.execPath,
+    command: 'node',
     args: ['dist/server.js'],
     cwd: repoCwd,
     env: { ...process.env, AGENT_CLAIM_LEDGER_PATH: ledgerPath },
