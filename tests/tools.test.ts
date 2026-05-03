@@ -227,6 +227,116 @@ describeTools('agent claim MCP tools', () => {
     }
   });
 
+  it('reports deterministic conflict details for overlapping claim requests', async () => {
+    const ledgerPath = await makeLedgerPath();
+    const client = await connectClient(ledgerPath);
+
+    try {
+      await client.callTool({
+        name: 'claim_files',
+        arguments: {
+          agentId: 'coder-a',
+          paths: ['src/shared.ts', 'src/already-owned.ts'],
+          cwd: '/repo',
+        },
+      });
+
+      const collision = await client.callTool({
+        name: 'claim_files',
+        arguments: {
+          agentId: 'coder-b',
+          paths: ['src/shared.ts', 'src/new.ts', './src/already-owned.ts'],
+          cwd: '/repo',
+        },
+      });
+
+      expect(collision.structuredContent).toEqual({
+        ok: false,
+        claimed: [],
+        conflicts: [
+          {
+            path: '/repo/src/already-owned.ts',
+            ownerAgentId: 'coder-a',
+            expiresAt: expect.any(String),
+          },
+          {
+            path: '/repo/src/shared.ts',
+            ownerAgentId: 'coder-a',
+            expiresAt: expect.any(String),
+          },
+        ],
+        ledgerVersion: 1,
+        claimedUntil: expect.any(String),
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns missing for an unknown claim id and leaves releases empty', async () => {
+    const ledgerPath = await makeLedgerPath();
+    const client = await connectClient(ledgerPath);
+
+    try {
+      const release = await client.callTool({
+        name: 'release_claim',
+        arguments: { agentId: 'coder-a', claimId: 'missing-claim' },
+      });
+
+      expect(release.structuredContent).toEqual({
+        ok: true,
+        released: [],
+        missing: ['missing-claim'],
+        ledgerVersion: 1,
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('returns missing false entries when whose_claim inspects absent paths', async () => {
+    const ledgerPath = await makeLedgerPath();
+    const client = await connectClient(ledgerPath);
+
+    try {
+      const whose = await client.callTool({
+        name: 'whose_claim',
+        arguments: { paths: ['src/none.ts', './src/also-none.ts'], cwd: '/repo' },
+      });
+
+      expect(whose.structuredContent).toEqual({
+        ledgerVersion: 1,
+        results: [
+          { path: '/repo/src/also-none.ts', claimed: false },
+          { path: '/repo/src/none.ts', claimed: false },
+        ],
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('reports missing paths and keeps released empty when release_claim targets absent paths', async () => {
+    const ledgerPath = await makeLedgerPath();
+    const client = await connectClient(ledgerPath);
+
+    try {
+      const release = await client.callTool({
+        name: 'release_claim',
+        arguments: { agentId: 'coder-a', paths: ['src/missing.ts', './src/also-missing.ts'], cwd: '/repo' },
+      });
+
+      expect(release.structuredContent).toEqual({
+        ok: true,
+        released: [],
+        missing: ['/repo/src/also-missing.ts', '/repo/src/missing.ts'],
+        ledgerVersion: 1,
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it('smoke tests claim, inspect, and release end-to-end over stdio MCP transport', async () => {
     const ledgerPath = await makeLedgerPath();
     const client = await connectClient(ledgerPath);
