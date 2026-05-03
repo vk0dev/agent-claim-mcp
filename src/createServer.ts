@@ -1,15 +1,19 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import { registerTools } from './tools/hello.js';
+import { registerTools } from './tools/index.js';
 
-export function createServer(): McpServer {
+export interface CreateServerOptions {
+  ledgerPath?: string;
+}
+
+export function createServer(options: CreateServerOptions = {}): McpServer {
   const server = new McpServer({
     name: 'agent-claim-mcp',
     version: '1.0.0',
   });
-  registerTools(server);
+
+  registerTools(server, options.ledgerPath);
   return server;
 }
 
-// Smithery requires this export for server scanning
 export const createSandboxServer = createServer;

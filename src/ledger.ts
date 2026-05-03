@@ -37,8 +37,10 @@ export interface ClaimInput {
 }
 
 export interface ReleaseInput {
-  claimId: string;
+  claimId?: string;
   agentId: string;
+  cwd?: string;
+  paths?: string[];
 }
 
 export class LedgerConflictError extends Error {
@@ -58,7 +60,6 @@ export class LedgerOwnershipError extends Error {
 export async function loadLedger(options: LoadLedgerOptions = {}): Promise<ClaimLedger> {
   const ledgerPath = options.ledgerPath ?? getDefaultLedgerPath();
   const now = options.now ?? new Date().toISOString();
-
   const ledger = await readOrInitLedger(ledgerPath, now);
   const pruned = pruneExpiredClaims(ledger, now);
 
@@ -69,22 +70,32 @@ export async function loadLedger(options: LoadLedgerOptions = {}): Promise<Claim
   return pruned.ledger;
 }
 
+export async function loadLedgerSnapshot(options: LoadLedgerOptions = {}): Promise<ClaimLedger> {
+  const ledgerPath = options.ledgerPath ?? getDefaultLedgerPath();
+  const now = options.now ?? new Date().toISOString();
+  return readOrInitLedger(ledgerPath, now);
+}
+
 export async function claimPaths(input: ClaimInput, options: LoadLedgerOptions = {}): Promise<ClaimLedger> {
   const ledgerPath = options.ledgerPath ?? getDefaultLedgerPath();
   const now = options.now ?? input.claimedAt;
   const ledger = await loadLedger({ ledgerPath, now });
   const normalizedPaths = normalizeClaimPaths(input.paths, input.cwd);
+  const conflicts = ledger.claims.filter((claim) => claim.agentId !== input.agentId && claim.paths.some((entry) => normalizedPaths.includes(entry)));
 
-  const conflicts = ledger.claims.filter((claim) => claim.paths.some((entry) => normalizedPaths.includes(entry)));
   if (conflicts.length > 0) {
-    throw new LedgerConflictError('One or more requested paths are already claimed.', conflicts);
+    throw new LedgerConflictError('One or more requested paths are already claimed by another active owner.', conflicts);
   }
+
+  const retainedClaims = ledger.claims.filter(
+    (claim) => !(claim.agentId === input.agentId && samePaths(claim.paths, normalizedPaths)),
+  );
 
   const nextLedger: ClaimLedger = {
     version: 1,
     updatedAt: now,
     claims: [
-      ...ledger.claims,
+      ...retainedClaims,
       {
         claimId: input.claimId,
         agentId: input.agentId,
@@ -106,31 +117,66 @@ export async function releaseClaim(input: ReleaseInput, options: LoadLedgerOptio
   const ledgerPath = options.ledgerPath ?? getDefaultLedgerPath();
   const now = options.now ?? new Date().toISOString();
   const ledger = await loadLedger({ ledgerPath, now });
-  const target = ledger.claims.find((claim) => claim.claimId === input.claimId);
+  const targets = resolveReleaseTargets(ledger, input);
 
-  if (!target) {
+  if (targets.length === 0) {
     return ledger;
   }
 
-  if (target.agentId !== input.agentId) {
-    throw new LedgerOwnershipError(`Claim ${input.claimId} belongs to ${target.agentId}, not ${input.agentId}.`);
+  for (const target of targets) {
+    if (target.agentId !== input.agentId) {
+      throw new LedgerOwnershipError(`Claim ${target.claimId} belongs to ${target.agentId}, not ${input.agentId}.`);
+    }
   }
 
+  const targetIds = new Set(targets.map((claim) => claim.claimId));
   const nextLedger: ClaimLedger = {
     version: 1,
     updatedAt: now,
-    claims: ledger.claims.filter((claim) => claim.claimId !== input.claimId),
+    claims: ledger.claims.filter((claim) => !targetIds.has(claim.claimId)),
   };
 
   await persistLedger(ledgerPath, nextLedger);
   return nextLedger;
 }
 
+export function inspectClaims(
+  ledger: ClaimLedger,
+  paths: string[],
+  cwd?: string,
+): Array<{
+  path: string;
+  claimed: boolean;
+  ownerAgentId?: string;
+  taskId?: string;
+  note?: string;
+  expiresAt?: string;
+  claimId?: string;
+}> {
+  const normalizedPaths = normalizeClaimPaths(paths, cwd);
+
+  return normalizedPaths.map((entry) => {
+    const owner = ledger.claims.find((claim) => claim.paths.includes(entry));
+    if (!owner) {
+      return { path: entry, claimed: false };
+    }
+
+    return {
+      path: entry,
+      claimed: true,
+      ownerAgentId: owner.agentId,
+      taskId: owner.taskId,
+      note: owner.note,
+      expiresAt: owner.expiresAt,
+      claimId: owner.claimId,
+    };
+  });
+}
+
 async function readOrInitLedger(ledgerPath: string, now: string): Promise<ClaimLedger> {
   try {
     const raw = await readFile(ledgerPath, 'utf8');
     const parsed = JSON.parse(raw) as Partial<ClaimLedger>;
-
     return {
       version: 1,
       updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : now,
@@ -153,29 +199,36 @@ function pruneExpiredClaims(ledger: ClaimLedger, now: string): { ledger: ClaimLe
 
   return {
     changed,
-    ledger: changed
-      ? {
-          version: 1,
-          updatedAt: now,
-          claims: nextClaims,
-        }
-      : ledger,
+    ledger: changed ? { version: 1, updatedAt: now, claims: nextClaims } : ledger,
   };
 }
 
 function normalizeClaimRecord(record: ClaimRecord): ClaimRecord {
-  return {
-    ...record,
-    paths: [...record.paths].sort(),
-  };
+  return { ...record, paths: [...record.paths].sort() };
+}
+
+function resolveReleaseTargets(ledger: ClaimLedger, input: ReleaseInput): ClaimRecord[] {
+  if (input.claimId) {
+    const claim = ledger.claims.find((entry) => entry.claimId === input.claimId);
+    return claim ? [claim] : [];
+  }
+
+  if (input.paths && input.paths.length > 0) {
+    const normalizedPaths = normalizeClaimPaths(input.paths, input.cwd);
+    return ledger.claims.filter((claim) => claim.paths.some((entry) => normalizedPaths.includes(entry)));
+  }
+
+  return [];
+}
+
+function samePaths(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((entry, index) => entry === right[index]);
 }
 
 async function persistLedger(ledgerPath: string, ledger: ClaimLedger): Promise<void> {
   await mkdir(path.dirname(ledgerPath), { recursive: true });
   const tmpPath = `${ledgerPath}.tmp`;
-  const payload = `${JSON.stringify(ledger, null, 2)}\n`;
-
-  await writeFile(tmpPath, payload, 'utf8');
+  await writeFile(tmpPath, `${JSON.stringify(ledger, null, 2)}\n`, 'utf8');
   await rename(tmpPath, ledgerPath);
 }
 

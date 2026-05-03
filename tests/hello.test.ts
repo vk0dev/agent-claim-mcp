@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { createServer } from '../src/createServer.js';
+import { createSandboxServer, createServer } from '../src/createServer.js';
 
-describe('hello_world tool', () => {
-  it('creates a server with registered tools', () => {
-    const server = createServer();
-    expect(server).toBeDefined();
+describe('server factory exports', () => {
+  it('creates both standard and sandbox server factories', () => {
+    expect(createServer()).toBeDefined();
+    expect(createSandboxServer()).toBeDefined();
   });
 });
