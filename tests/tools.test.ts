@@ -30,7 +30,13 @@ async function connectClient(ledgerPath: string): Promise<Client> {
 }
 
 beforeAll(async () => {
-  await execFileAsync('/usr/bin/env', ['bash', '-lc', 'npm run build'], { cwd: repoCwd, env: process.env });
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath) {
+    await execFileAsync(process.execPath, [npmExecPath, 'run', 'build'], { cwd: repoCwd, env: process.env });
+    return;
+  }
+
+  await execFileAsync('npm', ['run', 'build'], { cwd: repoCwd, env: process.env });
 });
 
 describe.sequential('agent claim MCP tools', () => {
