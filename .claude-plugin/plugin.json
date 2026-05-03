@@ -1,0 +1,13 @@
+{
+  "name": "@vk0/{{PROJECT_NAME}}",
+  "mcpName": "io.github.vk0dev/{{PROJECT_NAME}}",
+  "version": "0.1.0",
+  "description": "{{PROJECT_DESCRIPTION}}",
+  "author": {
+    "name": "vk0.dev",
+    "url": "https://github.com/vk0dev"
+  },
+  "homepage": "https://vk0dev.github.io/{{PROJECT_NAME}}",
+  "repository": "https://github.com/vk0dev/{{PROJECT_NAME}}",
+  "category": "developer-tools"
+}
