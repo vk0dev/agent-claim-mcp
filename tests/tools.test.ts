@@ -32,7 +32,7 @@ async function connectClient(ledgerPath: string): Promise<Client> {
 beforeAll(async () => {
   const npmExecPath = process.env.npm_execpath;
   if (npmExecPath) {
-    await execFileAsync(process.execPath, [npmExecPath, 'run', 'build'], { cwd: repoCwd, env: process.env });
+    await execFileAsync('node', [npmExecPath, 'run', 'build'], { cwd: repoCwd, env: process.env });
     return;
   }
 
