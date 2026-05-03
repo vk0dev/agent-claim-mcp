@@ -4,8 +4,8 @@ import { registerTools } from './tools/hello.js';
 
 export function createServer(): McpServer {
   const server = new McpServer({
-    name: '{{PROJECT_NAME}}',
-    version: '0.1.0',
+    name: 'agent-claim-mcp',
+    version: '1.0.0',
   });
   registerTools(server);
   return server;

@@ -1,13 +1,13 @@
 {
-  "name": "@vk0/{{PROJECT_NAME}}",
-  "mcpName": "io.github.vk0dev/{{PROJECT_NAME}}",
-  "version": "0.1.0",
-  "description": "{{PROJECT_DESCRIPTION}}",
+  "name": "@vk0/agent-claim-mcp",
+  "mcpName": "io.github.vk0dev/agent-claim-mcp",
+  "version": "1.0.0",
+  "description": "Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree.",
   "author": {
     "name": "vk0.dev",
     "url": "https://github.com/vk0dev"
   },
-  "homepage": "https://vk0dev.github.io/{{PROJECT_NAME}}",
-  "repository": "https://github.com/vk0dev/{{PROJECT_NAME}}",
+  "homepage": "https://vk0dev.github.io/agent-claim-mcp",
+  "repository": "https://github.com/vk0dev/agent-claim-mcp",
   "category": "developer-tools"
 }

@@ -1,8 +1,8 @@
 {
-  "name": "@vk0/{{PROJECT_NAME}}",
-  "version": "0.1.0",
-  "description": "{{PROJECT_DESCRIPTION}}",
-  "mcpName": "io.github.vk0dev/{{PROJECT_NAME}}",
+  "name": "@vk0/agent-claim-mcp",
+  "version": "1.0.0",
+  "description": "Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree.",
+  "mcpName": "io.github.vk0dev/agent-claim-mcp",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     "CHANGELOG.md"
   ],
   "bin": {
-    "{{PROJECT_NAME}}": "./dist/cli.js"
+    "agent-claim-mcp": "./dist/cli.js"
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
@@ -29,17 +29,26 @@
     "claude-code",
     "anthropic",
     "ai-agent",
-    "developer-tools"
+    "agent-coordination",
+    "parallel-agents",
+    "file-lock",
+    "worktree",
+    "claims",
+    "developer-tools",
+    "local-first",
+    "json-ledger",
+    "cursor",
+    "codex"
   ],
   "author": "vk0.dev",
   "license": "MIT",
-  "homepage": "https://vk0dev.github.io/{{PROJECT_NAME}}",
+  "homepage": "https://vk0dev.github.io/agent-claim-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vk0dev/{{PROJECT_NAME}}.git"
+    "url": "https://github.com/vk0dev/agent-claim-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/vk0dev/{{PROJECT_NAME}}/issues"
+    "url": "https://github.com/vk0dev/agent-claim-mcp/issues"
   },
   "engines": {
     "node": ">=18.0.0"
