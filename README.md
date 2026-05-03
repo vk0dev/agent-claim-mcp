@@ -248,6 +248,38 @@ Read the local ledger and explain whether a file path is free or currently claim
 }
 ```
 
+## Troubleshooting
+
+### `claim_files` returns `ok: false`
+
+This means at least one requested path is already claimed by another active owner, so nothing new was written. Check the `conflicts` array for the exact overlapping normalized paths and the current `ownerAgentId`, then inspect the same paths with `whose_claim` before retrying.
+
+```json
+{
+  "tool": "whose_claim",
+  "arguments": {
+    "paths": ["src/foo.ts", "src/new.ts"],
+    "cwd": "/repo"
+  }
+}
+```
+
+If one path collides, a mixed request is still all-or-nothing. Split the work or wait for the current owner to release the conflicting path.
+
+### `release_claim` with a claim id returns `missing: ["..."]`
+
+That claim id was not active in the local ledger at release time. It may already be released, expired, or never existed on this machine. This is not treated as a partial success.
+
+### `release_claim` with paths returns `released: []`
+
+If `ok` is still `true` but `released` is empty, the requested normalized paths did not match any active claim owned by the caller. The `missing` array tells you which normalized paths were not matched.
+
+Use `whose_claim` first when you are unsure whether the path is free, owned by another agent, or already gone from the ledger.
+
+### Releasing someone else’s claim
+
+Only the current owner can release an active claim. If another agent still owns the path, inspect it with `whose_claim`, coordinate with that owner, or wait for the TTL to expire.
+
 ## Comparison
 
 | Tool | Best at | Where Agent Claim MCP is different |
