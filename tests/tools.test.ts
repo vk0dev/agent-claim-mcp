@@ -337,7 +337,7 @@ describeTools('agent claim MCP tools', () => {
     }
   });
 
-  it('smoke tests claim, inspect, and release end-to-end over stdio MCP transport', async () => {
+  it('smoke tests overlapping claims across distinct session identities over stdio MCP transport', async () => {
     const ledgerPath = await makeLedgerPath();
     const client = await connectClient(ledgerPath);
 
@@ -348,12 +348,34 @@ describeTools('agent claim MCP tools', () => {
       });
       expect(claim.structuredContent).toMatchObject({ ok: true, claimed: ['/repo/src/smoke.ts'] });
 
+      const overlap = await client.callTool({
+        name: 'claim_files',
+        arguments: { agentId: 'coder-b', paths: ['src/smoke.ts', 'src/other.ts'], cwd: '/repo' },
+      });
+      expect(overlap.structuredContent).toEqual({
+        ok: false,
+        claimed: [],
+        conflicts: [
+          {
+            path: '/repo/src/smoke.ts',
+            ownerAgentId: 'coder-a',
+            expiresAt: expect.any(String),
+          },
+        ],
+        ledgerVersion: 1,
+        claimedUntil: expect.any(String),
+      });
+
       const whose = await client.callTool({
         name: 'whose_claim',
-        arguments: { paths: ['src/smoke.ts'], cwd: '/repo' },
+        arguments: { paths: ['src/smoke.ts', 'src/other.ts'], cwd: '/repo' },
       });
-      expect(whose.structuredContent).toMatchObject({
-        results: [{ path: '/repo/src/smoke.ts', claimed: true, ownerAgentId: 'coder-a' }],
+      expect(whose.structuredContent).toEqual({
+        ledgerVersion: 1,
+        results: [
+          { path: '/repo/src/other.ts', claimed: false },
+          { path: '/repo/src/smoke.ts', claimed: true, ownerAgentId: 'coder-a', taskId: undefined, note: undefined, expiresAt: expect.any(String), claimId: expect.any(String) },
+        ],
       });
 
       const release = await client.callTool({

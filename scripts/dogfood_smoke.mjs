@@ -34,21 +34,53 @@ async function run() {
 
   const claim = await client.callTool({
     name: 'claim_files',
-    arguments: { agentId: 'smoke-agent', paths: ['src/smoke.ts'], cwd: '/repo' },
+    arguments: { agentId: 'smoke-agent-a', paths: ['src/smoke.ts'], cwd: '/repo' },
   });
   console.log('claim_files:', JSON.stringify(claim.structuredContent ?? claim.content, null, 2));
 
+  const overlap = await client.callTool({
+    name: 'claim_files',
+    arguments: { agentId: 'smoke-agent-b', paths: ['src/smoke.ts', 'src/other.ts'], cwd: '/repo' },
+  });
+  console.log('claim_files overlap:', JSON.stringify(overlap.structuredContent ?? overlap.content, null, 2));
+
   const whose = await client.callTool({
     name: 'whose_claim',
-    arguments: { paths: ['src/smoke.ts'], cwd: '/repo' },
+    arguments: { paths: ['src/smoke.ts', 'src/other.ts'], cwd: '/repo' },
   });
   console.log('whose_claim:', JSON.stringify(whose.structuredContent ?? whose.content, null, 2));
 
   const release = await client.callTool({
     name: 'release_claim',
-    arguments: { agentId: 'smoke-agent', paths: ['src/smoke.ts'], cwd: '/repo' },
+    arguments: { agentId: 'smoke-agent-a', paths: ['src/smoke.ts'], cwd: '/repo' },
   });
   console.log('release_claim:', JSON.stringify(release.structuredContent ?? release.content, null, 2));
+
+  if (!claim.structuredContent?.ok) {
+    throw new Error('Expected first claim to succeed');
+  }
+
+  if (overlap.structuredContent?.ok !== false) {
+    throw new Error('Expected overlapping second claim to fail deterministically');
+  }
+
+  if (JSON.stringify(overlap.structuredContent.conflicts) !== JSON.stringify([
+    {
+      path: '/repo/src/smoke.ts',
+      ownerAgentId: 'smoke-agent-a',
+      expiresAt: overlap.structuredContent.conflicts?.[0]?.expiresAt,
+    },
+  ])) {
+    throw new Error(`Unexpected overlap conflicts: ${JSON.stringify(overlap.structuredContent.conflicts)}`);
+  }
+
+  if (whose.structuredContent?.results?.[0]?.claimed !== false || whose.structuredContent?.results?.[1]?.ownerAgentId !== 'smoke-agent-a') {
+    throw new Error(`Unexpected whose_claim overlap state: ${JSON.stringify(whose.structuredContent)}`);
+  }
+
+  if (release.structuredContent?.ok !== true) {
+    throw new Error('Expected owner release to succeed');
+  }
 
   await client.close();
   console.log('Smoke test passed!');
