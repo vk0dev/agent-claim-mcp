@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, readFile, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -6,21 +6,50 @@ import process from 'node:process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-const cwd = process.cwd();
+const packageRootArgIndex = process.argv.indexOf('--package-root');
+const packageRoot = packageRootArgIndex >= 0 ? path.resolve(process.argv[packageRootArgIndex + 1] ?? process.cwd()) : process.cwd();
 const ledgerDir = await mkdtemp(path.join(os.tmpdir(), 'agent-claim-smoke-'));
 const ledgerPath = path.join(ledgerDir, 'ledger.json');
+const serverEntry = path.join(packageRoot, 'dist', 'server.js');
 
 const transport = new StdioClientTransport({
   command: process.execPath,
-  args: ['dist/server.js'],
-  cwd,
+  args: [serverEntry],
+  cwd: packageRoot,
   env: { ...process.env, AGENT_CLAIM_LEDGER_PATH: ledgerPath },
   stderr: 'inherit',
 });
 
 const client = new Client({ name: 'smoke-test', version: '0.1.0' });
 
+async function verifyPackagedSurface() {
+  const packageJsonPath = path.join(packageRoot, 'package.json');
+  const serverJsonPath = path.join(packageRoot, 'server.json');
+
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  const serverJson = JSON.parse(await readFile(serverJsonPath, 'utf8'));
+  await stat(serverEntry);
+
+  if (packageJson.name !== serverJson.packages?.[0]?.identifier) {
+    throw new Error(`Package identifier mismatch: package.json=${packageJson.name} server.json=${serverJson.packages?.[0]?.identifier}`);
+  }
+
+  if (packageJson.version !== serverJson.version || packageJson.version !== serverJson.packages?.[0]?.version) {
+    throw new Error(
+      `Version mismatch: package.json=${packageJson.version} server.json=${serverJson.version} package-entry=${serverJson.packages?.[0]?.version}`,
+    );
+  }
+
+  console.log('Packaged surface verified:', JSON.stringify({
+    packageRoot,
+    packageName: packageJson.name,
+    version: packageJson.version,
+    serverEntry,
+  }, null, 2));
+}
+
 async function run() {
+  await verifyPackagedSurface();
   await client.connect(transport);
 
   const tools = await client.listTools();
