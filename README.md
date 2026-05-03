@@ -25,13 +25,13 @@ Find and replace these in all files:
 
 | Placeholder | Replace with | Example |
 |-------------|-------------|---------|
-| `{{PROJECT_NAME}}` | Your project name (npm-safe) | `my-cool-mcp` |
-| `{{PROJECT_DESCRIPTION}}` | One-line description (≤100 chars for MCP Registry) | `Analyze git blame patterns to find knowledge silos` |
+| `agent-claim-mcp` | Your project name (npm-safe) | `my-cool-mcp` |
+| `Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree.` | One-line description (≤100 chars for MCP Registry) | `Analyze git blame patterns to find knowledge silos` |
 
 ```bash
 # Quick sed replacement (macOS):
 find . -type f -not -path './.git/*' -not -path './node_modules/*' \
-  -exec sed -i '' 's/{{PROJECT_NAME}}/my-cool-mcp/g; s/{{PROJECT_DESCRIPTION}}/Your description here/g' {} +
+  -exec sed -i '' 's/agent-claim-mcp/my-cool-mcp/g; s/Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree./Your description here/g' {} +
 ```
 
 ### 2. Install and verify

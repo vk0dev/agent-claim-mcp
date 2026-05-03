@@ -1,4 +1,4 @@
-# {{PROJECT_NAME}} — PRD
+# agent-claim-mcp — PRD
 
 **Status: draft**
 **Owner:** vk0

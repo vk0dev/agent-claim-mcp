@@ -1,4 +1,4 @@
-# {{PROJECT_NAME}}
+# agent-claim-mcp
 
 ## Stack
 - TypeScript, `@modelcontextprotocol/sdk`, Zod

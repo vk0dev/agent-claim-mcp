@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.vk0dev/{{PROJECT_NAME}}",
-  "description": "{{PROJECT_DESCRIPTION}}",
+  "name": "io.github.vk0dev/agent-claim-mcp",
+  "description": "Local-first MCP server for parallel AI coding agents to claim file ownership before edits, preventing stomping on each other in the same worktree.",
   "repository": {
-    "url": "https://github.com/vk0dev/{{PROJECT_NAME}}",
+    "url": "https://github.com/vk0dev/agent-claim-mcp",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@vk0/{{PROJECT_NAME}}",
-      "version": "0.1.0",
+      "identifier": "@vk0/agent-claim-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }

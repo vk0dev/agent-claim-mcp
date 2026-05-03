@@ -1,6 +1,6 @@
 # Publishing Playbook
 
-How to release updates and manage marketplace presence for `@vk0/{{PROJECT_NAME}}`.
+How to release updates and manage marketplace presence for `@vk0/agent-claim-mcp`.
 This document is for **any agent** (Claude Code, OpenClaw, Cursor, Cline, or manual).
 
 ---
@@ -43,11 +43,11 @@ CI does the rest: npm publish, GitHub Release, Official MCP Registry, Smithery.
 
 ```bash
 # One-time setup for a new project:
-gh repo create vk0dev/{{PROJECT_NAME}} --public --source=. --push
-gh secret set NPM_TOKEN --repo vk0dev/{{PROJECT_NAME}} --body $(grep _authToken ~/.npmrc | cut -d= -f2)
-gh secret set SMITHERY_API_KEY --repo vk0dev/{{PROJECT_NAME}} --body <smithery-key>
-gh api repos/vk0dev/{{PROJECT_NAME}}/pages -X POST -f build_type=workflow
-gh api repos/vk0dev/{{PROJECT_NAME}}/topics -X PUT \
+gh repo create vk0dev/agent-claim-mcp --public --source=. --push
+gh secret set NPM_TOKEN --repo vk0dev/agent-claim-mcp --body $(grep _authToken ~/.npmrc | cut -d= -f2)
+gh secret set SMITHERY_API_KEY --repo vk0dev/agent-claim-mcp --body <smithery-key>
+gh api repos/vk0dev/agent-claim-mcp/pages -X POST -f build_type=workflow
+gh api repos/vk0dev/agent-claim-mcp/topics -X PUT \
   -f "names[]=mcp" -f "names[]=mcp-server" -f "names[]=claude-code" \
   -f "names[]=anthropic" -f "names[]=developer-tools"
 
@@ -75,4 +75,4 @@ gh api repos/vk0dev/{{PROJECT_NAME}}/topics -X PUT \
 
 | Variable | Value |
 |----------|-------|
-| `SMITHERY_SERVER_NAME` | `unfucker/{{PROJECT_NAME}}` (your Smithery namespace/name) |
+| `SMITHERY_SERVER_NAME` | `unfucker/agent-claim-mcp` (your Smithery namespace/name) |
