@@ -5,7 +5,7 @@
 
 Use Agent Claim MCP when multiple coding agents share one worktree and you need a tiny local coordination primitive before edits, not a full orchestration framework. It gives agents one job: claim paths, detect collisions, and release ownership so parallel work stops stomping the same files.
 
-Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions.
+Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions. The current release surface centers on three bounded actions only: claim normalized paths, inspect who owns them, and release by path or claim id with explicit conflict reporting across separate sessions.
 
 ## Why / When to use
 
@@ -77,7 +77,7 @@ Add the stdio server to your Claude Code MCP config:
 
 ### `claim_files`
 
-Create or refresh a local file-claim entry so parallel agents can see ownership before editing and avoid stomping the same worktree paths during active tasks.
+Create or refresh a local file-claim entry so parallel agents can see ownership before editing and avoid stomping the same worktree paths during active tasks. Conflict responses are explicit, so overlapping claims across separate sessions do not stay implicit or in-memory only.
 
 **Input**
 
@@ -131,11 +131,11 @@ Remove an existing claim owned by the current agent so finished, paused, or reas
 }
 ```
 
-Only the current owner can release an active claim, whether you target it by `claimId` or by `paths`.
+Only the current owner can release an active claim, whether you target it by `claimId` or by normalized `paths`, so cleanup works after real multi-agent runs and path-shape variants resolve consistently.
 
 ### `whose_claim`
 
-Read the local ledger and explain whether a file path is free or currently claimed, including owner, task, note, and expiry metadata for safe coordination.
+Read the local ledger and explain whether a file path is free or currently claimed, including owner, task, note, and expiry metadata for safe coordination across separate sessions sharing the same worktree.
 
 **Input**
 
@@ -294,7 +294,8 @@ Only the current owner can release an active claim. If another agent still owns 
 ## How it works
 
 - claims are stored in a local JSON ledger at `~/.agent-claim-mcp/ledger.json`
-- paths are normalized to absolute paths so different agents cannot dodge collisions with relative path tricks
+- paths are normalized to absolute paths so different agents cannot dodge collisions with relative path tricks or path-shape variants
+- overlapping claims across separate sessions resolve through the same ledger instead of relying on in-memory coordination
 - expired claims are pruned automatically on reads and writes
 - writes use temp-file plus rename semantics for atomic updates
 
