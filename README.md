@@ -322,6 +322,14 @@ Use this check before release:
 npm pack --dry-run
 ```
 
+## Publish prerequisites
+
+The expected publish path is the GitHub Actions release job that runs after a version tag push. For the unattended npm publish step to succeed, the workflow must receive a non-empty `NODE_AUTH_TOKEN` from the repo secret configured for npm publishing.
+
+If `NODE_AUTH_TOKEN` is missing or empty in CI, the first npm publish attempt fails with `ENEEDAUTH` even when the package itself is ready. Before retrying a release, confirm the GitHub repository secret is present and mapped into the publish job rather than trying to re-run publish steps locally.
+
+For the local proof path before tagging, run the short smoke checklist in [`docs/smoke-proof.md`](./docs/smoke-proof.md).
+
 ## License
 
 [MIT](./LICENSE)
