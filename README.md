@@ -17,7 +17,7 @@ Choose this server when your workflow already has task routing, but still needs 
 - you want a narrow primitive that another agent can understand from name + description alone
 - you do **not** want a bundled rules engine, queue runner, or orchestration platform
 
-## Install
+## Installation
 
 ### Claude Code
 
@@ -72,6 +72,18 @@ Add the stdio server to your Claude Code MCP config:
   }
 }
 ```
+
+## Limitations
+
+This server is intentionally narrow and local-first. Install it when your agents share one filesystem view, not when you need distributed coordination.
+
+- Claims live in a local ledger on disk, so they only coordinate sessions that can read and write the same worktree.
+- It is not a hosted lock service, queue, or scheduler, and it does not replicate claims across machines by itself.
+- TTL expiry is protective cleanup, not a substitute for higher-level task ownership or human review.
+- Path normalization reduces shape mismatches, but agents still need to point at the same repo root or `cwd` for claims to line up.
+- If your workflow needs cross-host coordination, central audit policy, or mandatory approvals, pair this server with a separate orchestration layer instead of stretching the claim ledger beyond its scope.
+
+For a real multi-agent run before publishing, see [DOGFOOD.md](./DOGFOOD.md) and the proof artifacts in [docs/dogfood-report.md](./docs/dogfood-report.md).
 
 ## Tools
 
