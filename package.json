@@ -21,7 +21,8 @@
     "test": "vitest run",
     "lint": "tsc --noEmit",
     "smoke": "npm run build && node scripts/dogfood_smoke.mjs",
-    "dogfood:overlap": "npm run build && node scripts/demo-claim-conflict.mjs"
+    "dogfood:overlap": "npm run build && node scripts/demo-claim-conflict.mjs",
+    "dogfood:expiry": "npm run build && node scripts/demo-expiry-prune.mjs"
   },
   "keywords": [
     "mcp",
