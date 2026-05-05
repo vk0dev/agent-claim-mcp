@@ -344,6 +344,8 @@ If `NODE_AUTH_TOKEN` is missing or empty in CI, the first npm publish attempt fa
 
 For the local proof path before tagging, run the short smoke checklist in [`docs/smoke-proof.md`](./docs/smoke-proof.md).
 
+For the first post-publish external acceptance check, use the maintainer runbook in [`docs/official-registry-validation-runbook.md`](./docs/official-registry-validation-runbook.md) and the short recording template in [`docs/official-registry-validation-checklist.md`](./docs/official-registry-validation-checklist.md).
+
 ## License
 
 [MIT](./LICENSE)

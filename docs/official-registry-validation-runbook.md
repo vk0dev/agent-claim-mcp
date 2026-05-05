@@ -17,9 +17,24 @@ Important truthfulness note:
 
 Run this only after all of the following are true:
 
-1. The tag push for the release has happened, for example `v1.0.0`.
-2. `.github/workflows/publish.yml` has completed.
+1. The release tag push has happened, for example `v1.0.0`.
+2. `.github/workflows/publish.yml` has completed for that tag.
 3. npm shows the published package version.
+
+If any of these are false, stop immediately and record **FAIL** for this validation attempt rather than guessing.
+
+## Quick operator path
+
+If you want the shortest honest execution path immediately after first publish:
+
+1. Confirm npm publish landed.
+2. Capture the exact GitHub Actions evidence from the publish workflow.
+3. Pull the published tarball and verify packaged metadata.
+4. Check one lightweight npm discovery surface.
+5. Assign one verdict only: **PASS**, **SOFT-BLOCKED**, or **FAIL**.
+6. Copy the result into [`official-registry-validation-checklist.md`](./official-registry-validation-checklist.md).
+
+The rest of this runbook explains each step and the exact success signal to look for.
 
 ## 1. Confirm npm publish actually landed
 
@@ -31,9 +46,10 @@ npm view @vk0/agent-claim-mcp version
 npm view @vk0/agent-claim-mcp dist-tags --json
 ```
 
-Expected:
+Expected success signals:
 - `version` returns the release version you just shipped.
 - `dist-tags.latest` matches that same version.
+- neither command returns `E404`.
 
 If npm does **not** show the version yet, stop here. Registry validation is not honest yet because the package is still missing upstream.
 
@@ -51,11 +67,19 @@ Capture whether each step:
 - emitted a warning
 - failed but was tolerated by `continue-on-error`
 
+Expected success signals:
+- `Publish to npm with provenance` succeeded for the same release tag and same version npm now reports.
+- `Install mcp-publisher` succeeded.
+- `Authenticate to MCP Registry` either clearly succeeded or clearly emitted the warning/error you will quote.
+- `Publish to Official MCP Registry` either clearly succeeded or clearly emitted the warning/error you will quote.
+
 If the registry step printed the warning below, note it verbatim in the evidence section:
 
 ```text
 ::warning::MCP Registry publish failed — may need manual 'mcp-publisher publish'
 ```
+
+Do **not** collapse warning-only registry output into success just because npm succeeded.
 
 ## 3. Validate shipped package metadata from npm
 
@@ -77,6 +101,9 @@ Validate manually that:
 - `server.json.version` matches the release
 - `server.json.packages[*].identifier` still points at `@vk0/agent-claim-mcp`
 
+Expected success signal:
+- both extracted JSON objects show the same shipped version and the expected package identity.
+
 ## 4. Do one install/discovery sanity check from npm
 
 Use the published artifact, not the local workspace build:
@@ -92,6 +119,11 @@ Optional extra sanity check if you want the tarball contents listed directly:
 tar -tf "$TARBALL" | egrep 'package/(server.json|package.json|dist/)'
 ```
 
+Expected success signals:
+- package name, version, and description resolve from npm
+- unpacked size resolves without error
+- optional tarball listing contains at least `package/package.json`, `package/server.json`, and packaged `dist/`
+
 This is not a full runtime E2E. It is a quick proof that the package users and registries see contains the expected metadata files.
 
 ## 5. Check the Official MCP Registry surface
@@ -104,11 +136,14 @@ This repo's current registry integration path is the `mcp-publisher publish` ste
 If those logs clearly show success, record that as the first-pass verdict.
 
 If they do **not** clearly show success, treat the registry state as **unverified** until you inspect the actual registry follow-up surface produced by `mcp-publisher` for this publish attempt, for example:
-- a created/updated registry entry
-- a linked PR/change request
+- a created or updated registry entry
+- a linked PR or change request
 - or an explicit failure that still requires a manual `mcp-publisher publish`
 
 Because the exact remote registry artifact may vary, do **not** claim registry success from npm success alone.
+
+Expected success signal:
+- either the workflow logs show a clearly successful registry publish path, or you have a concrete registry-side URL or artifact proving the update landed.
 
 ## 6. Verdict rules
 
@@ -123,7 +158,7 @@ All are true:
 ### SOFT-BLOCKED
 Use this if:
 - npm publish succeeded
-- but the Official MCP Registry step is warning-only / ambiguous / unverified
+- but the Official MCP Registry step is warning-only, ambiguous, or unverified
 - and follow-up is still needed on the registry side
 
 ### FAIL
@@ -131,6 +166,17 @@ Use this if:
 - npm publish did not land
 - packaged metadata is wrong
 - or the registry publish path shows a concrete failure that prevents claiming availability
+
+## 7. Recommended recording format
+
+Use the small template in [`official-registry-validation-checklist.md`](./official-registry-validation-checklist.md) and keep one filled copy in the task finding, release note, or any adjacent maintainer evidence comment.
+
+Minimum recording bar:
+- exact shipped version
+- exact commands run
+- workflow URL
+- exact warning or failure text if registry publish was not clean
+- one final verdict only
 
 ## Evidence note template
 
