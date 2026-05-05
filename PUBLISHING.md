@@ -83,9 +83,14 @@ Recommended path:
 gh run rerun <failed-run-id> --repo vk0dev/agent-claim-mcp
 ```
 
-For the known `v1.0.0` incident documented in `business/agent-claim-mcp-official-registry-validation-2026-05-04.md`, the failed run id was `25282612113`.
+For the known `v1.0.0` incident documented in `business/agent-claim-mcp-official-registry-validation-2026-05-04.md`, the failed run id was `25282612113`, so the exact rerun command is:
+
+```bash
+gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp
+```
 
 After the rerun succeeds, use:
+- `npm run preflight:registry`
 - `docs/official-registry-validation-runbook.md`
 - `docs/official-registry-validation-checklist.md`
 
