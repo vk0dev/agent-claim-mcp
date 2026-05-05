@@ -35,6 +35,22 @@ jobs:
       - name: MCP client smoke test
         run: npm run smoke
 
+      - name: Verify npm publish credentials
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::Missing required GitHub Actions secret NPM_TOKEN for repo vk0dev/agent-claim-mcp."
+            echo "::error::Add a valid npm token with publish access to @vk0/agent-claim-mcp, then rerun this workflow for the release tag."
+            exit 1
+          fi
+
+          npm whoami >/dev/null 2>&1 || {
+            echo "::error::NPM_TOKEN is present but npm authentication failed."
+            echo "::error::Confirm the repo secret value is current and has publish access to @vk0/agent-claim-mcp, then rerun this workflow for the release tag."
+            exit 1
+          }
+
       - name: Publish to npm with provenance
         run: npm publish --access public --provenance
         env:

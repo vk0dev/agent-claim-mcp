@@ -23,7 +23,7 @@ git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin main --follow-tags
 ```
 
-CI does the rest: npm publish, GitHub Release, Official MCP Registry, Smithery.
+CI does the rest once the required repo secrets are configured correctly: npm publish, GitHub Release, Official MCP Registry, Smithery.
 
 ## What updates automatically
 
@@ -37,7 +37,9 @@ CI does the rest: npm publish, GitHub Release, Official MCP Registry, Smithery.
 | **PulseMCP** | Auto from Registry | 1-7 days |
 | **Glama / MseeP / MCPServers.org** | Auto-scraping npm | 24-48h |
 
-**Manual steps: ZERO.** Push tag → everything updates.
+**Manual steps after the one-time secret setup: effectively zero.** Push tag → workflow handles the rest.
+
+If the publish workflow fails before the registry steps, treat that as a release-infra problem, not a product-code problem.
 
 ## First release setup
 
@@ -68,8 +70,26 @@ gh api repos/vk0dev/agent-claim-mcp/topics -X PUT \
 
 | Secret | Source |
 |--------|--------|
-| `NPM_TOKEN` | `~/.npmrc` or npmjs.com → Access Tokens |
+| `NPM_TOKEN` | npm token with publish access to `@vk0/agent-claim-mcp` |
 | `SMITHERY_API_KEY` | smithery.ai → Account → API Keys |
+
+## Rerun path after fixing secrets
+
+If `.github/workflows/publish.yml` fails with npm auth errors such as `ENEEDAUTH`, fix the repo secret first, then rerun the existing tag workflow instead of creating product-code churn.
+
+Recommended path:
+
+```bash
+gh run rerun <failed-run-id> --repo vk0dev/agent-claim-mcp
+```
+
+For the known `v1.0.0` incident documented in `business/agent-claim-mcp-official-registry-validation-2026-05-04.md`, the failed run id was `25282612113`.
+
+After the rerun succeeds, use:
+- `docs/official-registry-validation-runbook.md`
+- `docs/official-registry-validation-checklist.md`
+
+to record the Official MCP Registry verdict packet exactly once.
 
 ## Required GitHub Variables
 
