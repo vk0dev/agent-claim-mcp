@@ -1,6 +1,6 @@
-# Local smoke proof before publish
+# Local smoke proof for npm-live release checks
 
-Use this short proof path before tagging a release or asking someone else to retry the GitHub Actions publish job.
+Use this short proof path after local changes, before tagging a release, or before asking someone else to retry the GitHub Actions publish or registry-validation job.
 
 ## Commands
 
