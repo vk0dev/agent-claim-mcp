@@ -10,8 +10,19 @@ It is intentionally specific to this repo's current release flow:
 
 Important truthfulness note:
 - **Do not run this before npm publish exists.**
-- The Official MCP Registry validation step is partly blocked until the first real npm package is available.
 - The GitHub Actions workflow already treats MCP Registry publish as `continue-on-error`, so this runbook is the follow-up path for checking what actually happened after the tag-driven publish.
+
+## Current blocker packet, as of v1.0.0 workflow state
+
+Use this section as the current truthful status packet until a fresh publish rerun reaches the registry steps.
+
+- npm package `@vk0/agent-claim-mcp@1.0.0` is already live.
+- GitHub Actions workflow run `25282612113` did **not** reach Official MCP Registry validation.
+- The blocking reason was early npm authentication failure from missing or unusable repo secret `NPM_TOKEN`, so no honest registry acceptance claim can be made from that run.
+- Commit `349533c` added fail-fast npm auth checks so future reruns stop earlier and more clearly when publish credentials are broken.
+- The next truthful operator action is: `gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp` after fixing the repo secret `NPM_TOKEN`.
+
+Until that rerun finishes and reaches the registry steps, the correct status is **SOFT-BLOCKED**, not PASS.
 
 ## Preconditions
 
@@ -20,8 +31,10 @@ Run this only after all of the following are true:
 1. The release tag push has happened, for example `v1.0.0`.
 2. `.github/workflows/publish.yml` has completed for that tag.
 3. npm shows the published package version.
+4. The workflow attempt you are validating actually reached the MCP Registry authentication or publish steps.
 
 If any of these are false, stop immediately and record **FAIL** for this validation attempt rather than guessing.
+If npm is live but the workflow died before registry steps, record **SOFT-BLOCKED** with the blocker packet above instead of pretending validation happened.
 
 ## Quick operator path
 
@@ -221,3 +234,9 @@ Then inspect the release workflow logs for:
 - `Publish to Official MCP Registry`
 
 If npm is present but registry logs are ambiguous, report **SOFT-BLOCKED**, not success.
+
+If npm is present but the workflow never reached registry steps because npm auth failed early, report this exact blocker summary:
+- npm package `@vk0/agent-claim-mcp@1.0.0` is live.
+- Workflow run `25282612113` failed before Official MCP Registry validation because npm auth failed early.
+- Next truthful action after fixing repo secret `NPM_TOKEN`: `gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp`.
+- Current verdict: `SOFT-BLOCKED`.
