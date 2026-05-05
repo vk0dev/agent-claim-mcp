@@ -75,6 +75,8 @@ Claude Desktop uses `~/Library/Application Support/Claude/claude_desktop_config.
 }
 ```
 
+After saving `claude_desktop_config.json`, fully restart Claude Desktop so it reloads the MCP server configuration.
+
 ### Cursor
 
 ```json
