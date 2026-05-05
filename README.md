@@ -35,6 +35,8 @@ For the current truthful pre-publish state, point your MCP client at this local 
 }
 ```
 
+That hardcoded path is a macOS-style local example. On Windows, point your MCP client at the built `dist/cli.js` path on your own machine instead of copying the POSIX path literally.
+
 Build once before using the local path:
 
 ```bash
