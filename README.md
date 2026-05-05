@@ -62,6 +62,8 @@ Add the stdio server to your Claude Code MCP config:
 
 ### Claude Desktop
 
+Claude Desktop uses `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS and `%APPDATA%\Claude\claude_desktop_config.json` on Windows:
+
 ```json
 {
   "mcpServers": {
