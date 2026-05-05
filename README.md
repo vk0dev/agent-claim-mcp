@@ -29,13 +29,13 @@ For the current truthful pre-publish state, point your MCP client at this local 
   "mcpServers": {
     "agent-claim": {
       "command": "node",
-      "args": ["/Users/vkdev/projects/agent-claim-mcp/dist/cli.js"]
+      "args": ["/Users/vkdev/projects/agent-claim-mcp/dist/server.js"]
     }
   }
 }
 ```
 
-That hardcoded path is a macOS-style local example. On Windows, point your MCP client at the built `dist/cli.js` path on your own machine instead of copying the POSIX path literally.
+That hardcoded path is a macOS-style local example. On Windows, point your MCP client at the built `dist/server.js` path on your own machine instead of copying the POSIX path literally.
 
 Build once before using the local path:
 
