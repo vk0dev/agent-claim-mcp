@@ -21,6 +21,30 @@ Choose this server when your workflow already has task routing, but still needs 
 
 ## Installation
 
+Until the first npm publish lands, treat the `npx -y @vk0/agent-claim-mcp` snippets below as the **post-publish** path.
+For the current truthful pre-publish state, point your MCP client at this local checkout's built CLI instead:
+
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "node",
+      "args": ["/Users/vkdev/projects/agent-claim-mcp/dist/cli.js"]
+    }
+  }
+}
+```
+
+Build once before using the local path:
+
+```bash
+cd /Users/vkdev/projects/agent-claim-mcp
+npm ci
+npm run build
+```
+
+After the first successful npm publish, the `npx` snippets below become the canonical external install path again.
+
 ### Claude Code
 
 Add the stdio server to your Claude Code MCP config:
