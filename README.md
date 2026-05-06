@@ -8,6 +8,28 @@ Use Agent Claim MCP when multiple coding agents share one worktree and you need 
 Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions. The current release surface centers on three bounded actions only: claim normalized paths, inspect who owns them, and release by path or claim id with explicit conflict reporting across separate sessions.
 
 > Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Official MCP Registry validation is still pending, so do not describe the package as registry-accepted until that separate check passes.
+>
+> Current next manual step: fix the repo `NPM_TOKEN` secret, then rerun workflow `25282612113`.
+
+## Registry rerun quickstart
+
+Current truthful state:
+- npm `1.0.0` is live
+- Official MCP Registry acceptance is still pending
+- workflow `25282612113` did not complete the registry validation path
+- next manual step is to fix the repo `NPM_TOKEN` secret, then rerun that workflow
+
+Exact rerun command:
+
+```bash
+gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp
+```
+
+After the rerun, verify in this order:
+1. confirm the rerun completed successfully in GitHub Actions
+2. run `npm run preflight:registry`
+3. follow `docs/official-registry-validation-runbook.md`
+4. only then record registry acceptance as proven
 
 ## Why / When to use
 
@@ -27,8 +49,8 @@ The canonical external install path is now the published npm package:
 {
   "mcpServers": {
     "agent-claim": {
-      "command": "node",
-      "args": ["/Users/vkdev/projects/agent-claim-mcp/dist/server.js"]
+      "command": "npx",
+      "args": ["-y", "@vk0/agent-claim-mcp"]
     }
   }
 }
@@ -36,7 +58,18 @@ The canonical external install path is now the published npm package:
 
 If you are developing from a local checkout instead of the published package, you can still point your MCP client at the built `dist/server.js` directly.
 
-That hardcoded path is a macOS-style local example. On Windows, point your MCP client at the built `dist/server.js` path on your own machine instead of copying the POSIX path literally.
+```json
+{
+  "mcpServers": {
+    "agent-claim": {
+      "command": "node",
+      "args": ["/absolute/path/to/agent-claim-mcp/dist/server.js"]
+    }
+  }
+}
+```
+
+That second example is for local development only. On Windows, point your MCP client at the built `dist/server.js` path on your own machine instead of copying a POSIX path literally.
 
 Build once before using the local path:
 

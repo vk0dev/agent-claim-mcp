@@ -25,6 +25,8 @@ git push origin main --follow-tags
 
 CI does the rest once the required repo secrets are configured correctly: npm publish, GitHub Release, Official MCP Registry, Smithery.
 
+Current truthful status for `v1.0.0`: npm publish is already live, but Official MCP Registry acceptance is still not proven from the repo evidence because workflow `25282612113` did not reach a usable registry-validation finish.
+
 ## What updates automatically
 
 | Platform | Mechanism | Delay |
@@ -89,12 +91,13 @@ For the known `v1.0.0` incident documented in `business/agent-claim-mcp-official
 gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp
 ```
 
-After the rerun succeeds, use:
-- `npm run preflight:registry`
-- `docs/official-registry-validation-runbook.md`
-- `docs/official-registry-validation-checklist.md`
+After the rerun succeeds, verify in this order:
+- confirm the rerun completed successfully in GitHub Actions
+- run `npm run preflight:registry`
+- follow `docs/official-registry-validation-runbook.md`
+- use `docs/official-registry-validation-checklist.md` only after the registry result is actually observed
 
-to record the Official MCP Registry verdict packet exactly once.
+do not claim Official MCP Registry acceptance before that evidence exists.
 
 ## Required GitHub Variables
 
