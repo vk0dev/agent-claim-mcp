@@ -31,6 +31,8 @@ After the rerun, verify in this order:
 3. follow `docs/official-registry-validation-runbook.md`
 4. only then record registry acceptance as proven
 
+Operator shortcut: after fixing `NPM_TOKEN`, use the runbook's [Quick operator path](./docs/official-registry-validation-runbook.md#quick-operator-path) for the exact rerun-to-verification order.
+
 ## Why / When to use
 
 Choose this server when your workflow already has task routing, but still needs a simple lock-like primitive at edit time:
