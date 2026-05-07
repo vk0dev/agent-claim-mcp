@@ -58,6 +58,8 @@ The canonical external install path is now the published npm package:
 }
 ```
 
+Status note: npm install is live today, but Official MCP Registry validation and Smithery/other marketplace proof are still not established, so treat the package as npm-available first rather than marketplace-verified.
+
 If you are developing from a local checkout instead of the published package, you can still point your MCP client at the built `dist/server.js` directly.
 
 ```json
