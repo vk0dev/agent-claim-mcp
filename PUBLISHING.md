@@ -79,6 +79,10 @@ gh api repos/vk0dev/agent-claim-mcp/topics -X PUT \
 
 If `.github/workflows/publish.yml` fails with npm auth errors such as `ENEEDAUTH`, fix the repo secret first, then rerun the existing tag workflow instead of creating product-code churn.
 
+Secrets UI: https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions
+
+Exact secret to fix: `NPM_TOKEN`
+
 Recommended path:
 
 ```bash

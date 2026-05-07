@@ -41,13 +41,14 @@ jobs:
         run: |
           if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
             echo "::error::Missing required GitHub Actions secret NPM_TOKEN for repo vk0dev/agent-claim-mcp."
-            echo "::error::Add a valid npm token with publish access to @vk0/agent-claim-mcp, then rerun this workflow for the release tag."
+            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions and set NPM_TOKEN to a valid npm token with publish access to @vk0/agent-claim-mcp."
+            echo "::error::After fixing the secret, rerun the failed publish workflow with: gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp"
             exit 1
           fi
 
           npm whoami >/dev/null 2>&1 || {
             echo "::error::NPM_TOKEN is present but npm authentication failed."
-            echo "::error::Confirm the repo secret value is current and has publish access to @vk0/agent-claim-mcp, then rerun this workflow for the release tag."
+            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions, replace NPM_TOKEN with a current npm token that has publish access to @vk0/agent-claim-mcp, then rerun: gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp"
             exit 1
           }
 
