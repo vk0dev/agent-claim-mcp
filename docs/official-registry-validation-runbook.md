@@ -12,6 +12,20 @@ Important truthfulness note:
 - **Do not run this before npm publish exists.**
 - The GitHub Actions workflow already treats MCP Registry publish as `continue-on-error`, so this runbook is the follow-up path for checking what actually happened after the tag-driven publish.
 
+Deterministic rerun evidence capture command after vk fixes `NPM_TOKEN` and reruns the tracked workflow:
+
+```bash
+node scripts/official_registry_rerun_capture.mjs --run-id 25282612113
+```
+
+If a concrete Official MCP Registry proof URL exists, rerun with:
+
+```bash
+node scripts/official_registry_rerun_capture.mjs --run-id 25282612113 --public-proof-url <official-registry-proof-url>
+```
+
+Redirect the output into the dated verdict packet you want to keep under `business/`.
+
 ## Current blocker packet, as of v1.0.0 workflow state
 
 Use this section as the current truthful status packet until a fresh publish rerun reaches the registry steps.
@@ -204,7 +218,7 @@ Copy this into the eventual task finding or release note comment and fill it in:
 - Expected version: `X.Y.Z`
 - `npm view @vk0/agent-claim-mcp version`: `<output>`
 - `npm view @vk0/agent-claim-mcp dist-tags --json`: `<output>`
-- Publish workflow URL: `<GitHub Actions run URL>`
+- Publish workflow URL: `https://github.com/vk0dev/agent-claim-mcp/actions/runs/25282612113`
 - `Publish to npm with provenance`: `<pass/fail + note>`
 - `Authenticate to MCP Registry`: `<pass/fail/warn + note>`
 - `Publish to Official MCP Registry`: `<pass/fail/warn + note>`
