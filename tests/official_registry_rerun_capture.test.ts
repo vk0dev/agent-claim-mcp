@@ -45,6 +45,25 @@ describe('official registry rerun capture helper', () => {
     expect(inferVerdict(summary, '')).toBe('FAIL');
   });
 
+  it('keeps the tracked pre-rerun npm-secret failure lane soft-blocked when registry validation was never reached', () => {
+    const summary = summarizeRegistrySteps({
+      jobs: [
+        {
+          steps: [
+            { name: 'Publish to npm with provenance', status: 'completed', conclusion: 'failure', number: 9 },
+            { name: 'Install mcp-publisher', status: 'completed', conclusion: 'skipped', number: 10 },
+            { name: 'Authenticate to MCP Registry', status: 'completed', conclusion: 'skipped', number: 11 },
+            { name: 'Publish to Official MCP Registry', status: 'completed', conclusion: 'skipped', number: 12 },
+          ],
+        },
+      ],
+    });
+
+    expect(summary.find((step) => step.name === 'Authenticate to MCP Registry')?.reached).toBe(false);
+    expect(summary.find((step) => step.name === 'Publish to Official MCP Registry')?.reached).toBe(false);
+    expect(inferVerdict(summary, '')).toBe('SOFT-BLOCKED');
+  });
+
   it('renders a copy-pasteable packet with run identity, public proof slot, and suggested verdict', () => {
     const stepSummary = summarizeRegistrySteps({ jobs: [{ steps: [] }] });
     const output = renderVerdictPacket({

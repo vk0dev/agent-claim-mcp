@@ -15,11 +15,12 @@ export function summarizeRegistrySteps(jobsPayload) {
 
   return REGISTRY_STEP_NAMES.map((name) => {
     const step = allSteps.find((candidate) => candidate?.name === name);
+    const conclusion = step?.conclusion ?? 'not_reached';
     return {
       name,
-      reached: Boolean(step),
+      reached: Boolean(step) && !['skipped', 'not_reached'].includes(conclusion),
       status: step?.status ?? 'not_reached',
-      conclusion: step?.conclusion ?? 'not_reached',
+      conclusion,
       number: step?.number ?? null,
     };
   });
@@ -30,13 +31,22 @@ export function inferVerdict(stepSummary, publicProofUrl) {
   const npmPublish = byName.get('Publish to npm with provenance');
   const registryPublish = byName.get('Publish to Official MCP Registry');
   const registryAuth = byName.get('Authenticate to MCP Registry');
+  const registryStepsReached = Boolean(registryAuth?.reached || registryPublish?.reached);
 
-  if (npmPublish?.conclusion === 'failure' || registryAuth?.conclusion === 'failure' || registryPublish?.conclusion === 'failure') {
+  if (registryAuth?.conclusion === 'failure' || registryPublish?.conclusion === 'failure') {
     return 'FAIL';
   }
 
   if (registryPublish?.conclusion === 'success' && publicProofUrl) {
     return 'PASS';
+  }
+
+  if (npmPublish?.conclusion === 'failure' && !registryStepsReached) {
+    return 'SOFT-BLOCKED';
+  }
+
+  if (npmPublish?.conclusion === 'failure') {
+    return 'FAIL';
   }
 
   return 'SOFT-BLOCKED';
@@ -63,7 +73,7 @@ export function renderVerdictPacket({ run, stepSummary, publicProofUrl, verdict 
     `- Official MCP Registry proof URL: ${publicProofUrl || 'ABSENT (record explicit absence if still missing)'}\n\n` +
     `## Suggested verdict\n` +
     `- Verdict: ${verdict}\n` +
-    `- Rule: PASS requires successful registry publish plus public proof URL; FAIL requires a blocking workflow failure; otherwise SOFT-BLOCKED.\n`;
+    `- Rule: PASS requires successful registry publish plus public proof URL; FAIL requires a reached registry auth/publish failure or another post-rerun blocking workflow failure; pre-rerun npm-secret failures that never reach registry validation remain SOFT-BLOCKED.\n`;
 }
 
 function parseArgs(argv) {
