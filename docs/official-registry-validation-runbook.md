@@ -26,6 +26,8 @@ node scripts/official_registry_rerun_capture.mjs --run-id 25282612113 --public-p
 
 Redirect the output into the dated verdict packet you want to keep under `business/`.
 
+For a copy-pasteable writeup shape, start from `business/agent-claim-mcp-official-registry-rerun-verdict-template.md` and fill every field from the rerun plus npm/public proof checks.
+
 ## Current blocker packet, as of v1.0.0 workflow state
 
 Use this section as the current truthful status packet until a fresh publish rerun reaches the registry steps.

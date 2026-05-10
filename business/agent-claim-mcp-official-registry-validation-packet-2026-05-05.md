@@ -75,17 +75,20 @@ Use the runbook truth standard:
 Main should record all of the following in the verdict packet or adjacent evidence note:
 
 1. **Workflow URL** for the rerun of `25282612113` (canonical format: `https://github.com/vk0dev/agent-claim-mcp/actions/runs/25282612113`)
-2. Step outcomes for:
-   - `Verify npm publish credentials`
+2. **Workflow run id** for the actual rerun used as evidence
+3. **npm-auth precheck result** for the rerun lane (`Verify npm publish credentials`)
+4. Step outcomes for:
    - `Publish to npm with provenance`
    - `Install mcp-publisher`
    - `Authenticate to MCP Registry`
    - `Publish to Official MCP Registry`
-3. Exact warning/error text, if any
-4. `npm view` outputs for version and dist-tags
-5. Tarball extraction outputs for packaged `package.json` and `server.json`
-6. Registry surface URL / PR / listing, if one exists
-7. One final verdict only: `PASS`, `SOFT-BLOCKED`, or `FAIL`
+5. Exact warning/error text, if any
+6. `npm view` outputs for version and dist-tags
+7. Tarball extraction outputs for packaged `package.json` and `server.json`
+8. Final public registry URL / PR / listing, if one exists
+9. One final verdict only: `PASS`, `SOFT-BLOCKED`, or `FAIL`
+
+For a no-ambiguity field layout, start from `business/agent-claim-mcp-official-registry-rerun-verdict-template.md` instead of freeform notes.
 
 ### Q4: exact verdict matrix
 ## PASS
