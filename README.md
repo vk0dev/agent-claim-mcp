@@ -9,6 +9,8 @@ Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and 
 
 > Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Official MCP Registry validation is still pending, so do not describe the package as registry-accepted or marketplace-listed until that separate rerun-and-verification path passes.
 >
+> Milestone truth: the product wedge stays narrow, 3 tools plus a local JSON ledger for shared-worktree collision prevention, not a broader orchestration platform.
+>
 > Current next manual step: complete the pending human rerun and verification path for Official MCP Registry proof, then record the verdict from that run instead of assuming acceptance from npm availability.
 
 ## Registry rerun quickstart
