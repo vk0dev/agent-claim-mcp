@@ -7,9 +7,9 @@ Use Agent Claim MCP when multiple coding agents share one worktree and you need 
 
 Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions. The current release surface centers on three bounded actions only: claim normalized paths, inspect who owns them, and release by path or claim id with explicit conflict reporting across separate sessions.
 
-> Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Official MCP Registry validation is still pending, so do not describe the package as registry-accepted or marketplace-listed until that separate check passes.
+> Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Official MCP Registry validation is still pending, so do not describe the package as registry-accepted or marketplace-listed until that separate rerun-and-verification path passes.
 >
-> Current next manual step: fix the repo `NPM_TOKEN` secret, then rerun workflow `25282612113`.
+> Current next manual step: complete the pending human rerun and verification path for Official MCP Registry proof, then record the verdict from that run instead of assuming acceptance from npm availability.
 
 ## Registry rerun quickstart
 
@@ -17,7 +17,7 @@ Current truthful state:
 - npm `1.0.0` is live
 - Official MCP Registry acceptance is still pending
 - workflow `25282612113` did not complete the registry validation path
-- next manual step is to fix the repo `NPM_TOKEN` secret, then rerun that workflow
+- the repo is now past the earlier `NPM_TOKEN` secret-fix step, but the registry proof still needs a human rerun plus verification before it can be treated as accepted
 
 Exact rerun command:
 
@@ -31,7 +31,7 @@ After the rerun, verify in this order:
 3. follow `docs/official-registry-validation-runbook.md`
 4. only then record registry acceptance as proven
 
-Operator shortcut: after fixing `NPM_TOKEN`, use the runbook's [Quick operator path](./docs/official-registry-validation-runbook.md#quick-operator-path) for the exact rerun-to-verification order.
+Operator shortcut: use the runbook's [Quick operator path](./docs/official-registry-validation-runbook.md#quick-operator-path) for the exact rerun-to-verification order, and treat npm-live status as separate from registry-proof status.
 
 ## Why / When to use
 
