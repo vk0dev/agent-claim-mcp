@@ -1,6 +1,6 @@
 # Official MCP Registry validation runbook for `agent-claim-mcp`
 
-This runbook is the **first post-publish validation pass** for `@vk0/agent-claim-mcp`.
+This runbook is the **first post-publish external-proof validation pass** for `@vk0/agent-claim-mcp`.
 It is intentionally specific to this repo's current release flow:
 
 - package: `@vk0/agent-claim-mcp`
@@ -22,6 +22,12 @@ If a concrete Official MCP Registry proof URL exists, rerun with:
 
 ```bash
 node scripts/official_registry_rerun_capture.mjs --run-id 25282612113 --public-proof-url <official-registry-proof-url>
+```
+
+If the external proof branch is a live Smithery listing instead, run:
+
+```bash
+node scripts/official_registry_rerun_capture.mjs --run-id 25282612113 --smithery-url <smithery-listing-url>
 ```
 
 Redirect the output into the dated verdict packet you want to keep under `business/`.
@@ -51,6 +57,7 @@ Run this only after all of the following are true:
 
 If any of these are false, stop immediately and record **FAIL** for this validation attempt rather than guessing.
 If npm is live but the workflow died before registry steps, record **SOFT-BLOCKED** with the blocker packet above instead of pretending validation happened.
+A live Smithery listing can also satisfy the external-proof branch even while Official MCP Registry validation is still pending, but record that branch explicitly instead of overclaiming registry acceptance.
 
 ## Quick operator path
 
@@ -61,7 +68,8 @@ If you want the shortest honest execution path immediately after first publish:
 3. Pull the published tarball and verify packaged metadata.
 4. Check one lightweight npm discovery surface.
 5. Assign one verdict only: **PASS**, **SOFT-BLOCKED**, or **FAIL**.
-6. Copy the result into [`official-registry-validation-checklist.md`](./official-registry-validation-checklist.md).
+6. Record which proof branch satisfied the external proof surface: Official MCP Registry or Smithery.
+7. Copy the result into [`official-registry-validation-checklist.md`](./official-registry-validation-checklist.md).
 
 The rest of this runbook explains each step and the exact success signal to look for.
 

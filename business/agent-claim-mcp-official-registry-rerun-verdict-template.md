@@ -1,4 +1,4 @@
-# Official MCP Registry rerun verdict template for `agent-claim-mcp`
+# External proof rerun verdict template for `agent-claim-mcp`
 
 Use this template immediately after vk fixes `NPM_TOKEN` and the publish workflow is rerun.
 
@@ -25,9 +25,11 @@ Use this template immediately after vk fixes `NPM_TOKEN` and the publish workflo
 - Packaged `package.json` version check:
 - Packaged `server.json` version check:
 
-## Public registry proof
-- Final public registry URL / PR / listing if any:
-- If absent, write `ABSENT` and include the exact blocker text or missing-proof reason:
+## External proof
+- Proof branch used: `Official MCP Registry` or `Smithery`
+- Final public Official MCP Registry URL / PR / listing if any:
+- Final Smithery listing URL if any:
+- If the selected branch is still absent, write `ABSENT` and include the exact blocker text or missing-proof reason:
 
 ## Final verdict
 - Verdict: `PASS` / `SOFT-BLOCKED` / `FAIL`

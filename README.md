@@ -7,7 +7,7 @@ Use Agent Claim MCP when multiple coding agents share one worktree and you need 
 
 Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions. The current release surface centers on three bounded actions only: claim normalized paths, inspect who owns them, and release by path or claim id with explicit conflict reporting across separate sessions.
 
-> Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Official MCP Registry validation is still pending, so do not describe the package as registry-accepted or marketplace-listed until that separate rerun-and-verification path passes.
+> Release status: `@vk0/agent-claim-mcp@1.0.0` is live on npm, so the `npx -y @vk0/agent-claim-mcp` install path is now the truthful default for external users. Phase 5 external proof is satisfied by either Official MCP Registry validation or a live Smithery listing. Official MCP Registry validation is still pending, so until that rerun-and-verification path passes the current public proof branch is Smithery-first rather than registry-accepted.
 >
 > Milestone truth: the product wedge stays narrow, 3 tools plus a local JSON ledger for shared-worktree collision prevention, not a broader orchestration platform.
 >

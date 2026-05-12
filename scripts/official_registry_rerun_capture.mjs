@@ -26,12 +26,16 @@ export function summarizeRegistrySteps(jobsPayload) {
   });
 }
 
-export function inferVerdict(stepSummary, publicProofUrl) {
+export function inferVerdict(stepSummary, publicProofUrl, smitheryUrl = '') {
   const byName = new Map(stepSummary.map((step) => [step.name, step]));
   const npmPublish = byName.get('Publish to npm with provenance');
   const registryPublish = byName.get('Publish to Official MCP Registry');
   const registryAuth = byName.get('Authenticate to MCP Registry');
   const registryStepsReached = Boolean(registryAuth?.reached || registryPublish?.reached);
+
+  if (smitheryUrl) {
+    return 'PASS';
+  }
 
   if (registryAuth?.conclusion === 'failure' || registryPublish?.conclusion === 'failure') {
     return 'FAIL';
@@ -52,7 +56,7 @@ export function inferVerdict(stepSummary, publicProofUrl) {
   return 'SOFT-BLOCKED';
 }
 
-export function renderVerdictPacket({ run, stepSummary, publicProofUrl, verdict }) {
+export function renderVerdictPacket({ run, stepSummary, publicProofUrl, smitheryUrl, verdict }) {
   const runUrl = run?.html_url || run?.url || `https://github.com/vk0dev/agent-claim-mcp/actions/runs/${run?.databaseId ?? run?.id ?? 'UNKNOWN'}`;
   const runId = run?.databaseId ?? run?.id ?? 'UNKNOWN';
   const ref = run?.head_branch || run?.headBranch || 'UNKNOWN';
@@ -62,7 +66,7 @@ export function renderVerdictPacket({ run, stepSummary, publicProofUrl, verdict 
     `- ${step.name}: reached=${step.reached ? 'yes' : 'no'}, status=${step.status}, conclusion=${step.conclusion}`
   )).join('\n');
 
-  return `# Official MCP Registry rerun verdict packet for agent-claim-mcp\n\n` +
+  return `# External proof rerun verdict packet for agent-claim-mcp\n\n` +
     `- Workflow run URL: ${runUrl}\n` +
     `- Workflow run id: ${runId}\n` +
     `- Git ref: ${ref}\n` +
@@ -70,22 +74,30 @@ export function renderVerdictPacket({ run, stepSummary, publicProofUrl, verdict 
     `## Registry step summary\n${stepLines}\n\n` +
     `## Public proof\n` +
     `- npm package version check: run \`npm view @vk0/agent-claim-mcp version\` separately and paste the result here\n` +
-    `- Official MCP Registry proof URL: ${publicProofUrl || 'ABSENT (record explicit absence if still missing)'}\n\n` +
+    `- Official MCP Registry proof URL: ${publicProofUrl || 'ABSENT (record explicit absence if still missing)'}\n` +
+    `- Smithery listing URL: ${smitheryUrl || 'ABSENT (record explicit absence if this is not the proof branch)'}\n\n` +
     `## Suggested verdict\n` +
     `- Verdict: ${verdict}\n` +
-    `- Rule: PASS requires successful registry publish plus public proof URL; FAIL requires a reached registry auth/publish failure or another post-rerun blocking workflow failure; pre-rerun npm-secret failures that never reach registry validation remain SOFT-BLOCKED.\n`;
+    `- Rule: PASS requires either successful registry publish plus public registry proof URL, or a live Smithery listing URL. FAIL requires a reached registry auth/publish failure or another post-rerun blocking workflow failure. Pre-rerun npm-secret failures that never reach registry validation remain SOFT-BLOCKED.\n`;
+}
+
+function usage() {
+  return 'Usage: node scripts/official_registry_rerun_capture.mjs --run-id <github-actions-run-id> [--repo owner/repo] [--public-proof-url <url>] [--smithery-url <url>]';
 }
 
 function parseArgs(argv) {
-  const args = { repo: 'vk0dev/agent-claim-mcp', publicProofUrl: '' };
+  const args = { repo: 'vk0dev/agent-claim-mcp', publicProofUrl: '', smitheryUrl: '' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === '--run-id') args.runId = argv[++i];
+    if (arg === '--help' || arg === '-h') args.help = true;
+    else if (arg === '--run-id') args.runId = argv[++i];
     else if (arg === '--repo') args.repo = argv[++i];
     else if (arg === '--public-proof-url') args.publicProofUrl = argv[++i];
+    else if (arg === '--smithery-url') args.smitheryUrl = argv[++i];
   }
+  if (args.help) return args;
   if (!args.runId) {
-    throw new Error('Usage: node scripts/official_registry_rerun_capture.mjs --run-id <github-actions-run-id> [--repo owner/repo] [--public-proof-url <url>]');
+    throw new Error(usage());
   }
   return args;
 }
@@ -96,11 +108,15 @@ function ghJson(args) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    process.stdout.write(`${usage()}\n`);
+    return;
+  }
   const run = ghJson(['api', `repos/${args.repo}/actions/runs/${args.runId}`]);
   const jobs = ghJson(['api', `repos/${args.repo}/actions/runs/${args.runId}/jobs`]);
   const stepSummary = summarizeRegistrySteps(jobs);
-  const verdict = inferVerdict(stepSummary, args.publicProofUrl);
-  process.stdout.write(renderVerdictPacket({ run, stepSummary, publicProofUrl: args.publicProofUrl, verdict }));
+  const verdict = inferVerdict(stepSummary, args.publicProofUrl, args.smitheryUrl);
+  process.stdout.write(renderVerdictPacket({ run, stepSummary, publicProofUrl: args.publicProofUrl, smitheryUrl: args.smitheryUrl, verdict }));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

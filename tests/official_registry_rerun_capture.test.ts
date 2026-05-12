@@ -28,6 +28,23 @@ describe('official registry rerun capture helper', () => {
     expect(inferVerdict(summary, '')).toBe('SOFT-BLOCKED');
   });
 
+  it('treats a live Smithery listing as a valid external proof branch', () => {
+    const summary = summarizeRegistrySteps({
+      jobs: [
+        {
+          steps: [
+            { name: 'Publish to npm with provenance', status: 'completed', conclusion: 'success', number: 5 },
+            { name: 'Install mcp-publisher', status: 'completed', conclusion: 'skipped', number: 6 },
+            { name: 'Authenticate to MCP Registry', status: 'completed', conclusion: 'skipped', number: 7 },
+            { name: 'Publish to Official MCP Registry', status: 'completed', conclusion: 'skipped', number: 8 },
+          ],
+        },
+      ],
+    });
+
+    expect(inferVerdict(summary, '', 'https://smithery.ai/server/vk0dev/code-impact-mcp')).toBe('PASS');
+  });
+
   it('marks missing registry steps as not reached and yields FAIL on blocking publish/auth failures', () => {
     const summary = summarizeRegistrySteps({
       jobs: [
@@ -70,11 +87,13 @@ describe('official registry rerun capture helper', () => {
       run: { databaseId: 25282612113, html_url: 'https://github.com/vk0dev/agent-claim-mcp/actions/runs/25282612113', head_branch: 'main', head_sha: 'abc123' },
       stepSummary,
       publicProofUrl: '',
+      smitheryUrl: '',
       verdict: inferVerdict(stepSummary, ''),
     });
 
     expect(output).toContain('25282612113');
     expect(output).toContain('Official MCP Registry proof URL: ABSENT');
+    expect(output).toContain('Smithery listing URL: ABSENT');
     expect(output).toContain('Verdict: SOFT-BLOCKED');
     expect(output).toContain('Publish to Official MCP Registry');
   });
