@@ -42,7 +42,7 @@ describe('official registry rerun capture helper', () => {
       ],
     });
 
-    expect(inferVerdict(summary, '', 'https://smithery.ai/server/vk0dev/code-impact-mcp')).toBe('PASS');
+    expect(inferVerdict(summary, '', 'https://smithery.ai/server/agent-claim-mcp')).toBe('PASS');
   });
 
   it('marks missing registry steps as not reached and yields FAIL on blocking publish/auth failures', () => {
