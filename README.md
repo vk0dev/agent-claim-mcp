@@ -3,6 +3,8 @@
 [![npm](https://img.shields.io/npm/v/@vk0/agent-claim-mcp)](https://www.npmjs.com/package/@vk0/agent-claim-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+**Languages:** English · [日本語](./README.ja.md) · [简体中文](./README.zh-CN.md) · [Русский](./README.ru.md) · [Español](./README.es.md)
+
 Use Agent Claim MCP when multiple coding agents share one worktree and you need a tiny local coordination primitive before edits, not a full orchestration framework. It gives agents one job: claim paths, detect collisions, and release ownership so parallel work stops stomping the same files.
 
 Agent Claim MCP is a local-first MCP server for Claude Code, Cursor, Cline, and other MCP clients that need file ownership coordination without queues, planners, or custom AGENTS.md conventions. The current release surface centers on three bounded actions only: claim normalized paths, inspect who owns them, and release by path or claim id with explicit conflict reporting across separate sessions.
@@ -372,6 +374,50 @@ Only the current owner can release an active claim. If another agent still owns 
 **Choose Agent Claim MCP** when you already have your own tasking layer and only need path ownership coordination.
 
 **Choose a broader orchestration project** when you want one package to define agent rules, work queues, coordination policy, and higher-level execution flow.
+
+## FAQ
+
+<details>
+<summary><strong>When should an agent pick this over a git branch or worktree per agent?</strong></summary>
+
+Pick claims when multiple agents intentionally share one checkout and one filesystem view — because they reuse the same `node_modules`, build artifacts, or a running dev server, or because the tasking layer already splits work by files rather than by branches. Branch-per-agent and worktree-per-agent prevent collisions by copying state and deferring conflicts to merge time; claims prevent collisions by declaring path ownership before the first edit, with no extra checkouts and no merge step. If your workflow already isolates each agent in its own branch or worktree, you may not need this server at all.
+</details>
+
+<details>
+<summary><strong>How is a claim different from a real lock or from git worktree isolation?</strong></summary>
+
+A claim is an advisory ownership record, not an enforced filesystem lock. Nothing physically prevents a misbehaving process from writing to a claimed path; enforcement is cooperative, which is exactly the contract MCP agents can follow: call `claim_files` before editing, respect `ok: false`, release when done. Worktree isolation is stronger but heavier — separate checkouts, duplicated state, and conflicts that only surface at merge. The two compose: use worktrees for long-lived parallel streams, and claims inside any single worktree that more than one agent touches.
+</details>
+
+<details>
+<summary><strong>What do TTLs actually do, and what happens when a claim expires?</strong></summary>
+
+Every claim carries a TTL (`ttlSeconds`, default 3600), and expired claims are pruned automatically on the next ledger read or write. That means a crashed, killed, or abandoned session can never block a path forever — the worst case is one TTL window. Expiry is protective cleanup, not task handoff: an agent still actively working should refresh its own claim (re-claim the same paths under the same `agentId`) instead of asking for a very long TTL up front.
+</details>
+
+<details>
+<summary><strong>What exactly happens on a conflict?</strong></summary>
+
+`claim_files` is all-or-nothing. If any requested path is already owned by another active claim, the tool returns `ok: false`, writes nothing — including the non-conflicting paths in the same request — and lists each colliding normalized path with its current `ownerAgentId` and `expiresAt` in the `conflicts` array. There is no queueing, no retry, and no forced takeover. The calling agent decides what to do next: split the batch, inspect the owner with `whose_claim`, coordinate through its own tasking layer, or wait for release or TTL expiry.
+</details>
+
+<details>
+<summary><strong>Does it work across different MCP clients at the same time, like Claude Code plus Cursor?</strong></summary>
+
+Yes, as long as all clients run on the same machine as the same user. Each MCP client spawns its own server process, but every process converges on the same on-disk ledger with atomic temp-file-plus-rename writes, so a claim made from a Claude Code session is visible to a Cursor or Cline session immediately. The one thing agents must keep consistent is path shape: pass a `cwd` or absolute paths that resolve to the same repo root, so normalization lines up across clients.
+</details>
+
+<details>
+<summary><strong>Where is the state stored, and does anything leave my machine?</strong></summary>
+
+All state lives in one local JSON ledger at `~/.agent-claim-mcp/ledger.json`. There is no daemon, no background process, no network listener, no telemetry, and no cloud sync — the server only reads and writes that file when a tool is called. This is also the boundary of the product: claims coordinate sessions that share one filesystem view, and cross-host coordination is explicitly out of scope.
+</details>
+
+<details>
+<summary><strong>Can I release or steal a claim owned by another agent?</strong></summary>
+
+No. `release_claim` only removes active claims owned by the calling `agentId`, whether targeted by `claimId` or by normalized paths. If another agent still owns a path, your options are to inspect it with `whose_claim`, coordinate with that owner through your tasking layer, or wait for the TTL to expire. This keeps the primitive predictable: ownership changes only by explicit release or by expiry, never by a quiet takeover.
+</details>
 
 ## How it works
 
