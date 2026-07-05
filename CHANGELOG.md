@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Bump devDependencies to latest majors: TypeScript 6, Vitest 4, Zod 4, @types/node 25
+- Normalize GitHub Actions versions across all workflow files (checkout v5, setup-node v5, configure-pages v6, deploy-pages v5, action-gh-release v3)
+
 ## [1.0.1] - 2026-07-05
 
 ### Added
