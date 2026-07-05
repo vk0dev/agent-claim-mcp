@@ -86,10 +86,35 @@ jobs:
           echo "::warning::MCP Registry publish failed — may need manual 'mcp-publisher publish'"
         continue-on-error: true
 
-      - name: Publish to Smithery
+      # Smithery listings for stdio npm servers are created once via smithery.ai
+      # (OAuth) and then track the repo automatically. `smithery mcp publish`
+      # only accepts server URLs / .mcpb bundles, so here we just verify the
+      # listing is still live and warn loudly if it is not.
+      - name: Verify Smithery listing
         run: |
-          npx -y @smithery/cli@latest mcp publish --name "${{ vars.SMITHERY_SERVER_NAME }}" || \
-          echo "::warning::Smithery publish failed — set SMITHERY_SERVER_NAME variable and SMITHERY_API_KEY secret"
-        env:
-          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "https://smithery.ai/servers/unfucker/${{ github.event.repository.name }}")
+          if [ "$CODE" != "200" ]; then
+            echo "::warning::Smithery listing missing (HTTP $CODE) — submit once via https://smithery.ai/new (OAuth, manual)"
+          else
+            echo "Smithery listing live (HTTP 200)"
+          fi
+        continue-on-error: true
+
+      # Tell the dashboard to refresh now instead of waiting for the next
+      # collect cycle. Best-effort: publish is the real event.
+      - name: Notify dashboard refresh
+        run: |
+          PAYLOAD="{\"product\":\"${GITHUB_REPOSITORY##*/}\",\"version\":\"${GITHUB_REF_NAME}\"}"
+          SECRET="${{ secrets.DASHBOARD_REFRESH_SECRET }}"
+          if [ -z "$SECRET" ]; then
+            echo "::warning::DASHBOARD_REFRESH_SECRET not set — skipping notify"
+            exit 0
+          fi
+          SIG=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | sed 's/^.* //')
+          curl -sS --max-time 15 \
+            -H "X-Hub-Signature-256: sha256=$SIG" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            https://inbox.vk0.dev/api/dashboard/refresh \
+            || echo "::warning::dashboard refresh webhook failed (cron will catch up)"
         continue-on-error: true
