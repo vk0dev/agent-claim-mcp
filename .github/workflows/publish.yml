@@ -42,13 +42,13 @@ jobs:
           if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
             echo "::error::Missing required GitHub Actions secret NPM_TOKEN for repo vk0dev/agent-claim-mcp."
             echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions and set NPM_TOKEN to a valid npm token with publish access to @vk0/agent-claim-mcp."
-            echo "::error::After fixing the secret, rerun the failed publish workflow with: gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp"
+            echo "::error::After fixing the secret, rerun the failed workflow run from the Actions tab."
             exit 1
           fi
 
           npm whoami >/dev/null 2>&1 || {
             echo "::error::NPM_TOKEN is present but npm authentication failed."
-            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions, replace NPM_TOKEN with a current npm token that has publish access to @vk0/agent-claim-mcp, then rerun: gh run rerun 25282612113 --repo vk0dev/agent-claim-mcp"
+            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions, replace NPM_TOKEN with a current npm token that has publish access to @vk0/agent-claim-mcp, then rerun the failed workflow run."
             exit 1
           }
 
@@ -86,20 +86,6 @@ jobs:
           echo "::warning::MCP Registry publish failed — may need manual 'mcp-publisher publish'"
         continue-on-error: true
 
-      # Smithery listings for stdio npm servers are created once via smithery.ai
-      # (OAuth) and then track the repo automatically. `smithery mcp publish`
-      # only accepts server URLs / .mcpb bundles, so here we just verify the
-      # listing is still live and warn loudly if it is not.
-      - name: Verify Smithery listing
-        run: |
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "https://smithery.ai/servers/unfucker/${{ github.event.repository.name }}")
-          if [ "$CODE" != "200" ]; then
-            echo "::warning::Smithery listing missing (HTTP $CODE) — submit once via https://smithery.ai/new (OAuth, manual)"
-          else
-            echo "Smithery listing live (HTTP 200)"
-          fi
-        continue-on-error: true
-
       # Tell the dashboard to refresh now instead of waiting for the next
       # collect cycle. Best-effort: publish is the real event.
       - name: Notify dashboard refresh
@@ -118,3 +104,11 @@ jobs:
             https://inbox.vk0.dev/api/dashboard/refresh \
             || echo "::warning::dashboard refresh webhook failed (cron will catch up)"
         continue-on-error: true
+
+      # Post-release verification: fails the workflow if the release did not
+      # actually land on npm / Official MCP Registry / Pages. De-masks the
+      # continue-on-error publish steps above. Smithery is warn-only.
+      - name: Post-release verify
+        run: node scripts/post-release-verify.mjs "${GITHUB_REF_NAME#v}"
+        env:
+          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
