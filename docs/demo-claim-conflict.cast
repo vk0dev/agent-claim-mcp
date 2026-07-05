@@ -1,0 +1,13 @@
+{"version":3,"term":{"cols":80,"rows":24},"timestamp":1777856557,"command":"node scripts/demo-claim-conflict.mjs"}
+[0.508, "o", "\u001b[2m# Two agents, one worktree, one file collision.\u001b[0m\r\n"]
+[1.101, "o", "\u001b[1m$ claim_files agent=coder-a path=src/parser.ts\u001b[0m\r\n"]
+[0.721, "o", "\u001b[32m\u001b[1m>>> ok\u001b[0m {\r\n  \"ok\": true,\r\n  \"claimed\": [\r\n    \"/repo/src/parser.ts\"\r\n  ],\r\n  \"ledgerVersion\": 1\r\n}\r\n"]
+[1.202, "o", "\r\n"]
+[0.453, "o", "\u001b[1m$ claim_files agent=coder-b paths=src/parser.ts,src/tokenizer.ts\u001b[0m\r\n"]
+[0.806, "o", "\u001b[31m\u001b[1m>>> conflict\u001b[0m {\r\n  \"ok\": false,\r\n  \"conflicts\": [\r\n    {\r\n      \"path\": \"/repo/src/parser.ts\",\r\n      \"ownerAgentId\": \"coder-a\",\r\n      \"expiresAt\": \"2026-05-04T02:02:40.035Z\"\r\n    }\r\n  ],\r\n  \"claimed\": []\r\n}\r\n"]
+[1.501, "o", "\r\n"]
+[0.453, "o", "\u001b[1m$ whose_claim paths=src/parser.ts,src/tokenizer.ts\u001b[0m\r\n"]
+[0.705, "o", "\u001b[36m\u001b[1m>>> owner check\u001b[0m {\r\n  \"results\": [\r\n    {\r\n      \"path\": \"/repo/src/parser.ts\",\r\n      \"claimed\": true,\r\n      \"ownerAgentId\": \"coder-a\",\r\n      \"taskId\": \"task-42\",\r\n      \"note\": \"parser cleanup\",\r\n      \"expiresAt\": \"2026-05-04T02:02:40.035Z\",\r\n      \"claimId\": \"2b097533-edc2-43e0-b690-255a2f961416\"\r\n    },\r\n    {\r\n      \"path\": \"/repo/src/tokenizer.ts\",\r\n      \"claimed\": false\r\n    }\r\n  ],\r\n  \"ledgerVersion\": 1\r\n}\r\n"]
+[1.702, "o", "\r\n"]
+[0.451, "o", "\u001b[32m\u001b[1mDecision first:\u001b[0m claim before edits, avoid stomping the same file.\r\n"]
+[1.620, "x", "0"]
