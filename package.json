@@ -25,7 +25,9 @@
     "preflight:registry": "node scripts/registry_preflight_packet.mjs",
     "dogfood:overlap": "npm run build && node scripts/demo-claim-conflict.mjs",
     "dogfood:expiry": "npm run build && node scripts/demo-expiry-prune.mjs",
-    "dogfood:release-owner": "npm run build && node scripts/demo-owner-release.mjs"
+    "dogfood:release-owner": "npm run build && node scripts/demo-owner-release.mjs",
+    "version-sync": "node scripts/version-sync.mjs",
+    "release-check": "node scripts/release-check.mjs"
   },
   "keywords": [
     "mcp",
