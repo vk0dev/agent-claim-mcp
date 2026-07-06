@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-05
+
 ### Changed
-- Bump devDependencies to latest majors: TypeScript 6, Vitest 4, Zod 4, @types/node 25
-- Normalize GitHub Actions versions across all workflow files (checkout v5, setup-node v5, configure-pages v6, deploy-pages v5, action-gh-release v3)
+- Bump devDependencies to latest majors: TypeScript 6, Vitest 4, Zod 4, @types/node 25→26
+- Normalize GitHub Actions versions: `actions/checkout` v7, `actions/upload-pages-artifact` v5
+- Drop Node 18 from CI matrix (EOL)
+- Remove one-time Smithery submission workflow (listing already created)
+- Add version-sync `--check` gate and post-release verify step to publish workflow
 
 ## [1.0.1] - 2026-07-05
 

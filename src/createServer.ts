@@ -9,7 +9,7 @@ export interface CreateServerOptions {
 export function createServer(options: CreateServerOptions = {}): McpServer {
   const server = new McpServer({
     name: 'agent-claim-mcp',
-    version: '1.0.1',
+    version: '1.0.2',
   });
 
   registerTools(server, options.ledgerPath);
