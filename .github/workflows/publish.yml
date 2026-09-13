@@ -20,6 +20,9 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache: "npm"
 
+      - name: Update npm for OIDC trusted publishing
+        run: npm install -g npm@11
+
       - name: Install dependencies
         run: npm ci
 
@@ -35,27 +38,10 @@ jobs:
       - name: MCP client smoke test
         run: npm run smoke
 
-      - name: Verify npm publish credentials
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "::error::Missing required GitHub Actions secret NPM_TOKEN for repo vk0dev/agent-claim-mcp."
-            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions and set NPM_TOKEN to a valid npm token with publish access to @vk0/agent-claim-mcp."
-            echo "::error::After fixing the secret, rerun the failed workflow run from the Actions tab."
-            exit 1
-          fi
-
-          npm whoami >/dev/null 2>&1 || {
-            echo "::error::NPM_TOKEN is present but npm authentication failed."
-            echo "::error::Open https://github.com/vk0dev/agent-claim-mcp/settings/secrets/actions, replace NPM_TOKEN with a current npm token that has publish access to @vk0/agent-claim-mcp, then rerun the failed workflow run."
-            exit 1
-          }
-
-      - name: Publish to npm with provenance
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # 2026-09-13: npm auth via OIDC Trusted Publishing (configured on npmjs);
+      # bypass-2FA tokens are restricted, no token env needed.
+      - name: Publish to npm (OIDC trusted publishing)
+        run: npm publish --access public
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
